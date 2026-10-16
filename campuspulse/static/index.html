@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#182b38">
+  <meta name="referrer" content="no-referrer">
+  <title>CampusPulse · Assignment Guardian</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%23182b38'/%3E%3Cpath d='M9 22h7l3-9 5 16 3-7h5' fill='none' stroke='%237edac8' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script defer src="/static/bootstrap.js?v=20261016-1"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to workspace</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="CampusPulse home">
+      <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="12"/><path d="M9 22h7l3-9 5 16 3-7h5"/></svg>
+      <span>CampusPulse<span class="brand-subtitle">Assignment Guardian</span></span>
+    </a>
+    <nav aria-label="Main"><a class="nav-link active" href="#main">Workspace</a><a class="nav-link" href="#activity">Activity</a></nav>
+    <span id="service-status" class="service-status"><span class="status-dot"></span><span id="service-label">Checking services</span></span>
+  </header>
+
+  <main id="main" class="page-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div><p class="eyebrow">FROM THE BRIEF TO THE BUILD</p><h1 id="page-title">A clearer path<br>to <span>assignment ready.</span></h1><p class="intro-copy">Turn your assignment into a checklist. Check the repository.<br class="desktop-break"> Make the next step an informed one.</p></div>
+      <div class="intro-note"><span class="note-rule"></span><p>Every finding has a source.<br>Every action stays in your hands.</p><span class="note-caption">Gemini + GitHub MCP</span></div>
+    </section>
+
+    <ol class="journey" aria-label="Review progress">
+      <li id="stage-upload" class="current" aria-current="step"><span class="step-number">01</span><span>Bring your brief<small>Assignment + repository</small></span></li>
+      <li id="stage-analyze"><span class="step-number">02</span><span>Check the evidence<small>Source-backed findings</small></span></li>
+      <li id="stage-review"><span class="step-number">03</span><span>Choose the next step<small>Review before approval</small></span></li>
+    </ol>
+
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <div id="error" class="notice error" role="alert" hidden></div>
+    <div id="config-notice" class="config-notice" hidden><div><strong id="config-title">Services need configuration</strong><p id="config-message"></p></div><button id="refresh-health" class="text-button" type="button">Check again <span aria-hidden="true">↻</span></button></div>
+
+    <div class="workspace">
+      <div class="primary-column">
+        <details id="upload-panel" class="panel upload-panel" open>
+          <summary><span><span class="eyebrow">START HERE</span><span class="section-title">Your assignment, connected.</span></span><span class="summary-chevron" aria-hidden="true">⌄</span></summary>
+          <form id="upload-form">
+            <div class="file-field" id="file-field">
+              <svg class="file-icon" viewBox="0 0 48 54" fill="none" aria-hidden="true"><path d="M11 2h19l12 12v36a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7a5 5 0 0 1 5-5Z"/><path d="M29 2v13h13M15 27h18M15 34h18M15 41h11"/></svg>
+              <label for="assignment-file" class="file-label" id="file-label">Choose an assignment</label>
+              <p id="file-help">PDF, DOCX, TXT or Markdown · text-based files</p>
+              <input id="assignment-file" name="file" type="file" accept=".pdf,.docx,.txt,.md" aria-describedby="file-help" required>
+              <span class="file-choice" aria-hidden="true">Browse files <span>↑</span></span>
+            </div>
+            <label class="field-label" for="repository-url">GitHub repository</label>
+            <div class="url-field"><span aria-hidden="true">↗</span><input id="repository-url" name="repository_url" type="url" placeholder="https://github.com/owner/repository" autocomplete="off" autocapitalize="none" spellcheck="false" required aria-describedby="repository-help"></div>
+            <p class="field-help" id="repository-help">Use the repository’s HTTPS URL. Access is configured on the server.</p>
+            <div class="form-footer"><span class="quiet-note"><span aria-hidden="true">◇</span> Upload parses your document locally.</span><button id="upload-button" class="button primary" type="submit">Add assignment <span aria-hidden="true">→</span></button></div>
+          </form>
+        </details>
+
+        <section class="panel checklist-panel" aria-labelledby="checklist-title" aria-busy="false" id="checklist-panel">
+          <div class="section-heading"><div><p class="eyebrow">THE BIG PICTURE</p><h2 id="checklist-title">Requirement checklist</h2></div><span class="count-badge" id="requirement-count">—</span></div>
+          <div id="assignment-context" class="assignment-context" hidden></div>
+          <div id="analysis-controls" class="analysis-controls" hidden><p id="analysis-help">Extract requirements and check real repository evidence.</p><button id="analyze-button" class="button primary" type="button">Analyze repository <span aria-hidden="true">↗</span></button></div>
+          <div id="analysis-progress" class="analysis-progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><div><strong>Checking the brief and repository</strong><p>Gemini is gathering bounded evidence. This may take a moment.</p></div></div>
+          <div id="coverage" class="coverage" hidden><div><strong id="coverage-label"></strong><span id="coverage-detail"></span></div><div id="coverage-bar" class="coverage-bar" role="img"><span id="coverage-satisfied"></span><span id="coverage-not-satisfied"></span><span id="coverage-unverified"></span></div></div>
+          <div id="filters" class="filters" role="group" aria-label="Filter requirements" hidden></div>
+          <div id="analysis-warnings" class="analysis-warnings" hidden></div>
+          <div id="requirements" class="requirements"></div>
+          <div id="checklist-empty" class="empty-state"><div class="empty-illustration" aria-hidden="true"><span class="illustration-line"><i>✓</i><b></b><em></em></span><span class="illustration-line"><i>✓</i><b></b><em></em></span><span class="illustration-line"><i>·</i><b></b><em></em></span></div><h3>A brief today. A clear checklist next.</h3><p>Add your assignment and repository to start.<br>Your findings will appear here, with the evidence behind them.</p></div>
+        </section>
+
+        <section id="activity" class="activity-section" aria-labelledby="activity-title"><div class="section-heading"><div><p class="eyebrow">A VISIBLE RECORD</p><h2 id="activity-title">Activity</h2></div><button id="refresh-events" class="text-button" type="button" disabled>Refresh <span aria-hidden="true">↻</span></button></div><p id="activity-empty" class="muted">Uploads, analysis and approved actions will be recorded here.</p><ol id="events" class="event-list"></ol><details id="tool-activity" class="tool-activity" hidden><summary>Analysis decisions &amp; tool activity</summary><ol id="steps" class="event-list"></ol></details></section>
+      </div>
+
+      <aside class="secondary-column" aria-label="Source and actions">
+        <section id="guide" class="guide-panel" aria-labelledby="guide-title"><p class="eyebrow">BUILT ON EVIDENCE</p><h2 id="guide-title">Less guesswork.<br>More direction.</h2><ol class="principles"><li><span>01</span><div><h3>Start with the source</h3><p>Requirements link back to a quote in your assignment.</p></div></li><li><span>02</span><div><h3>See what supports it</h3><p>Review repository evidence and what remains unverified.</p></div></li><li><span>03</span><div><h3>Decide what happens</h3><p>Preview an Issue. Only your explicit approval can create it.</p></div></li></ol><div class="guide-foot"><span aria-hidden="true">↳</span> Missing evidence stays unverified.</div></section>
+
+        <section id="source-panel" class="panel source-panel" aria-labelledby="source-title" hidden><p class="eyebrow">YOUR SOURCE</p><h2 id="source-title">Assignment brief</h2><div id="source-meta"></div><details class="source-text"><summary>Read extracted text</summary><div id="source-pages"></div></details></section>
+
+        <section id="action-panel" class="panel action-panel" aria-labelledby="action-title"><div class="action-heading"><span class="action-symbol" aria-hidden="true">↗</span><span class="eyebrow">YOU HAVE THE FINAL SAY</span></div><h2 id="action-title">The next step is yours.</h2><div id="action-empty"><p>Recommendations can become GitHub Issues. Review the exact title and body before approving anything.</p><div class="approval-note"><span aria-hidden="true">◇</span> No Issue is created by analysis.</div></div><div id="action-preview" hidden><span id="action-status" class="badge"></span><p id="action-repository" class="action-repository"></p><p class="preview-label">Exact Issue title</p><h3 id="issue-title" class="issue-title"></h3><p class="preview-label">Exact Issue body</p><pre id="issue-body" class="issue-body" tabindex="0" aria-label="Exact Issue body"></pre><p id="proposal-fingerprint" class="fingerprint"></p><p id="action-message" class="action-message" role="status"></p><div id="issue-receipt"></div><label id="approval-label" class="approval-checkbox"><input id="approve-checkbox" type="checkbox"><span>I approve creating this exact Issue in the repository above.</span></label><button id="approve-button" class="button primary approve-button" type="button" disabled>Approve &amp; create Issue <span aria-hidden="true">↗</span></button><p class="field-help" id="write-help">This sends one write to GitHub, followed by a readback check.</p></div></section>
+        <p class="session-note">Your assignment access is kept in this browser tab’s session. Service credentials stay on the server.</p>
+      </aside>
+    </div>
+    <footer class="site-footer"><span>CampusPulse <span class="footer-divider">/</span> Assignment Guardian</span><span>Clarity before the next commit.</span></footer>
+  </main>
+  <noscript><p class="noscript">Enable JavaScript to upload an assignment and review its evidence.</p></noscript>
+</body>
+</html>

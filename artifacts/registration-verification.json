@@ -1,0 +1,106 @@
+{
+  "inventory": {
+    "agents": [
+      {
+        "agentId": "campuspulse-01",
+        "agentType": "architect",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.068Z"
+      },
+      {
+        "agentId": "campuspulse-02",
+        "agentType": "coder",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.144Z"
+      },
+      {
+        "agentId": "campuspulse-03",
+        "agentType": "coder",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.192Z"
+      },
+      {
+        "agentId": "campuspulse-04",
+        "agentType": "coder",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.242Z"
+      },
+      {
+        "agentId": "campuspulse-05",
+        "agentType": "coder",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.289Z"
+      },
+      {
+        "agentId": "campuspulse-06",
+        "agentType": "coder",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.337Z"
+      },
+      {
+        "agentId": "campuspulse-07",
+        "agentType": "coder",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.386Z"
+      },
+      {
+        "agentId": "campuspulse-08",
+        "agentType": "coder",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.444Z"
+      },
+      {
+        "agentId": "campuspulse-09",
+        "agentType": "tester",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.500Z"
+      },
+      {
+        "agentId": "campuspulse-10",
+        "agentType": "security-architect",
+        "status": "idle",
+        "health": 1,
+        "taskCount": 0,
+        "createdAt": "2026-10-16T17:44:24.560Z"
+      }
+    ],
+    "total": 10,
+    "filters": {}
+  },
+  "swarm": {
+    "swarmId": "swarm-1792172579639-84jexv",
+    "status": "running",
+    "topology": "hierarchical-mesh",
+    "maxAgents": 10,
+    "agentCount": 10,
+    "taskCount": 0,
+    "config": {
+      "topology": "hierarchical-mesh",
+      "maxAgents": 10,
+      "strategy": "specialized",
+      "communicationProtocol": "message-bus",
+      "autoScaling": true,
+      "consensusMechanism": "majority"
+    },
+    "createdAt": "2026-10-16T17:42:59.639Z",
+    "updatedAt": "2026-10-16T17:42:59.639Z"
+  }
+}

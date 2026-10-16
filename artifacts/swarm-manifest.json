@@ -1,0 +1,221 @@
+{
+  "swarm": {
+    "success": true,
+    "swarmId": "swarm-1792172579639-84jexv",
+    "topology": "hierarchical-mesh",
+    "strategy": "specialized",
+    "maxAgents": 10,
+    "initializedAt": "2026-10-16T17:42:59.639Z",
+    "config": {
+      "topology": "hierarchical-mesh",
+      "maxAgents": 10,
+      "strategy": "specialized",
+      "communicationProtocol": "message-bus",
+      "autoScaling": true,
+      "consensusMechanism": "majority"
+    },
+    "persisted": true
+  },
+  "workers": [
+    {
+      "id": "01",
+      "role": "Software Architect",
+      "type": "architect",
+      "task": "Write concise accurate README setup, architecture Mermaid, demo instructions and presentation outline in your owned docs. Use the shared contract. Explain product problem, module contracts and Definition of Done. Live services and cloud are unverified; do not fabricate. Inspect final implementation later if needed.",
+      "agent_id": "campuspulse-01",
+      "task_id": "task-1792172664122-rt0itr",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-01",
+        "agentType": "architect",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.068Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-01",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\01"
+    },
+    {
+      "id": "02",
+      "role": "Assignment Analyzer Engineer",
+      "type": "coder",
+      "task": "Implement parsing.py and extraction.py per contract. Support PDF, DOCX, UTF-8 txt/md with byte/page/text/zip-size limits, reject encrypted/scanned/empty files clearly. Preserve page or paragraph references. Use google-genai async structured output and injectable fake client. Every extracted quote must be found on its claimed page after whitespace normalization; reject fabricated references, duplicate IDs, invalid schema. Tests cover malformed files, grounding, ambiguity and real parser paths. No silent fake extraction.",
+      "agent_id": "campuspulse-02",
+      "task_id": "task-1792172664171-83r4vv",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-02",
+        "agentType": "coder",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.144Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-02",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\02"
+    },
+    {
+      "id": "03",
+      "role": "GitHub MCP Engineer",
+      "type": "coder",
+      "task": "Implement GitHubGateway using official MCP Python SDK streamable HTTP and https://api.githubcopilot.com/mcp/. Read current official github/github-mcp-server docs and inspect tools/list schemas at runtime. Implement collect(repository, tool, arguments) for repository/file/issues/ci with bounded output. Guard read/write tool separation and validate arguments with actual schemas. Implement create_issue and verify_issue with real MCP tools issue_write and issue_read as supported, never REST fallback. Require write setting for writes. Validate created/readback repo and identity. Inject fake MCP transport for tests; no live external writes.",
+      "agent_id": "campuspulse-03",
+      "task_id": "task-1792172664221-an07g6",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-03",
+        "agentType": "coder",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.192Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-03",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\03"
+    },
+    {
+      "id": "04",
+      "role": "Gemini Agent Engineer",
+      "type": "coder",
+      "task": "Implement GuardianAgent.analyze per contract using google-genai Gemini function calling in a bounded loop. Extract via RequirementExtractor, let Gemini select read repository/file/issues/ci tools through GitHubGateway, maintain typed evidence and concise action summaries. Gemini classifies every requirement with evidence IDs; validate coverage, IDs and positive/negative conclusions, downgrade ungrounded assertions to unverified. Never allow model to create Issues. Prompt injection boundaries, maximum calls, malformed/empty model output, upstream failures tested with injected clients. Dependencies may initially be unavailable: use typed interface fakes in tests, never production mocks.",
+      "agent_id": "campuspulse-04",
+      "task_id": "task-1792172664269-myrd0t",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-04",
+        "agentType": "coder",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.242Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-04",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\04"
+    },
+    {
+      "id": "05",
+      "role": "Backend Engineer",
+      "type": "coder",
+      "task": "Implement FastAPI create_app(settings=None, store=None, agent=None, gateway_factory=None) and app with exact CONTRACT routes. File upload parses locally and returns assignment/token. Bound bytes before parse. Enforce X-Assignment-Token. Analyze saves result. Issue proposals generated only from existing finding recommendations and persisted immutable hash. Approval must be literal true + matching hash + ALLOW_GITHUB_WRITES, atomically claim, execute once, verify exact repo/title/body, uncertain remote outcomes become unknown and never auto retry. Audit each step, safe errors, serve static UI, no wildcard CORS, reject cross-origin writes. Injection-friendly tests with fake dependencies. Document imports matching contracts; do not alter shared files.",
+      "agent_id": "campuspulse-05",
+      "task_id": "task-1792172664315-gsajmq",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-05",
+        "agentType": "coder",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.289Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-05",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\05"
+    },
+    {
+      "id": "06",
+      "role": "Frontend Engineer",
+      "type": "coder",
+      "task": "Build polished accessible responsive vanilla HTML/CSS/JS dashboard in campuspulse/static (served by FastAPI). Design: warm off-white paper, deep navy ink, teal accents, strong typographic hierarchy, spacious two-column workspace, compact status bar and intentional empty state. Product title CampusPulse / Assignment Guardian. Real file upload + repository URL, checklist with source quotes and evidence links, three statuses, tool activity, issue preview with exact title/body and explicit separate approve button, action history. Consume exact CONTRACT routes and models. sessionStorage assignment token, textContent for untrusted content, HTTPS GitHub-only link validation, no arbitrary innerHTML from APIs. Real missing-service states, no sample data disguised as live. Mobile and keyboard usable. Add independent browser tests only if useful; report what was actually run.",
+      "agent_id": "campuspulse-06",
+      "task_id": "task-1792172664364-kqe4rb",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-06",
+        "agentType": "coder",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.337Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-06",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\06"
+    },
+    {
+      "id": "07",
+      "role": "Google Cloud Engineer",
+      "type": "coder",
+      "task": "Implement cloud.py wrapper for the actual GuardianAgent and current supported Vertex AI Agent Engine deployment/invocation scripts. Read official current docs, use vertexai.Client agent_engines create/get API where supported, package source/dependencies correctly, runtime credentials via ADC/Secret Manager env refs, never embed tokens in deployment files/pickles/logs. Agent cloud method must invoke actual Gemini+GitHub MCP read analysis; do not publish write method. Add preflight/dry-run explicit behavior, saved resource name and invocation evidence, tests that check real SDK compatible configuration without cloud access. Prepare Dockerfile only for local/API optional UI hosting. No actual cloud writes without coordinator, project ID/ADC currently unavailable. Add DEPLOYMENT.md honest blocker and commands.",
+      "agent_id": "campuspulse-07",
+      "task_id": "task-1792172664419-7awl4s",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-07",
+        "agentType": "coder",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.386Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-07",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\07"
+    },
+    {
+      "id": "08",
+      "role": "Database Engineer",
+      "type": "coder",
+      "task": "Implement SQLite Store per CONTRACT with safe parameterized queries, migrations, durability, assignment JSON, analysis, action persistence, audit events. Hash bearer tokens; use constant-time authorization; unknown and unauthorized same KeyError. claim_action must atomically compare pending status + exact hash and become executing, concurrent approvals produce one winner. Failed/unknown actions not automatically retried. Action immutable repository/title/body bound to hash. Tests persistence restart, token isolation, conflicting approvals, rollback. Use only stdlib sqlite3 plus shared Pydantic models.",
+      "agent_id": "campuspulse-08",
+      "task_id": "task-1792172664477-wfqrio",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-08",
+        "agentType": "coder",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.444Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-08",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\08"
+    },
+    {
+      "id": "09",
+      "role": "QA Engineer",
+      "type": "tester",
+      "task": "Implement meaningful integration tests for upload->analyze->proposal->explicit approval->create/readback using explicit injectable fake Gemini/MCP transport, plus failures proving no write without approval and no duplicate on retry. Write small text assignment fixture and CI pytest/ruff workflow. Add docs/TESTING.md separating offline tests from live E2E requiring credentials. Inspect current integration files and adapt to real interfaces; report defects for coordinator rather than editing other owned modules. Do not mark mocked integration as live. External APIs and cloud deployment unavailable unless coordinator says otherwise.",
+      "agent_id": "campuspulse-09",
+      "task_id": "task-1792172664534-m6zsnj",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-09",
+        "agentType": "tester",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.500Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-09",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\09"
+    },
+    {
+      "id": "10",
+      "role": "Security and Integration Engineer",
+      "type": "security-architect",
+      "task": "Implement security.py validate_repository_url, proposal_hash, safe_error per CONTRACT with tests. Strict github.com HTTPS owner/repo parsing, percent-encoding/traversal/credential/query/fragment defense, canonical issue proposal hash; safe_error must redact arbitrary provider secrets (prefer stable safe messages). Audit prompt injection, tool exposure, approvals, credentials, upload abuse and cloud boundaries; write SECURITY.md with concrete limitations and actionable integration findings. Do not edit others' modules. Never read real credentials or perform external actions.",
+      "agent_id": "campuspulse-10",
+      "task_id": "task-1792172664591-uu4nuv",
+      "spawn": {
+        "success": true,
+        "agentId": "campuspulse-10",
+        "agentType": "security-architect",
+        "model": "inherit",
+        "modelRoutedBy": "explicit",
+        "status": "registered",
+        "createdAt": "2026-10-16T17:44:24.560Z",
+        "note": "Agent registered for coordination. Three execution paths: (1) call agent_execute(agentId, prompt) \u2014 direct LLM call via Anthropic Messages API (requires ANTHROPIC_API_KEY); (2) Claude Code Task tool \u2014 spawns a real subagent; (3) claude -p \u2014 headless background instance."
+      },
+      "branch": "swarm/worker-10",
+      "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\10"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+# Runtime and deployment SDK, verified against the 2.5.0 wheel on 2026-10-16.
+google-cloud-agentplatform[agent_engines]==2.5.0
+google-genai==2.31.0
+mcp==1.30.0
+pydantic==2.14.1
+pydantic-settings==2.16.0
+httpx==0.28.1
+jsonschema==4.26.0
+pypdf==6.21.0
+python-docx==1.2.0

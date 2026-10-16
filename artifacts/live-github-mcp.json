@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-10-16T18:01:36.932808+00:00",
+  "transport": "official GitHub MCP",
+  "repository": "https://github.com/irrumi/Campusgdg",
+  "read_only": true,
+  "checks": [
+    {
+      "kind": "repository",
+      "success": true,
+      "evidence_count": 1,
+      "sources": [
+        "https://github.com/irrumi/Campusgdg"
+      ],
+      "mcp_tools": [
+        "get_file_contents"
+      ]
+    },
+    {
+      "kind": "file",
+      "success": true,
+      "evidence_count": 1,
+      "sources": [
+        "https://github.com/irrumi/Campusgdg/blob/HEAD/README.md"
+      ],
+      "mcp_tools": [
+        "get_file_contents"
+      ]
+    },
+    {
+      "kind": "issues",
+      "success": true,
+      "evidence_count": 1,
+      "sources": [
+        "https://github.com/irrumi/Campusgdg/issues"
+      ],
+      "mcp_tools": [
+        "list_issues"
+      ]
+    },
+    {
+      "kind": "ci",
+      "success": true,
+      "evidence_count": 1,
+      "sources": [
+        "https://github.com/irrumi/Campusgdg/actions"
+      ],
+      "mcp_tools": [
+        "actions_list"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-10-16T19:03:39.543050+00:00",
+  "repository": "irrumi/Campusgdg",
+  "branch": "feat/campuspulse-guardian",
+  "pull_request": "https://github.com/irrumi/Campusgdg/pull/1",
+  "draft": true,
+  "user_approved": true,
+  "verified_implementation_head": "28257cab1c363688497942ff01e9e8ad86781c46",
+  "remote_ref_matched": true,
+  "author_login": "irrumi",
+  "committer_login": "irrumi",
+  "github_actions": {
+    "run_id": 38951926590,
+    "event": "pull_request",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/irrumi/Campusgdg/actions/runs/38951926590"
+  },
+  "email_privacy_fix": {
+    "unpublished_commits_rewritten": 8,
+    "source_tree_unchanged": true,
+    "force_push_used": false
+  },
+  "issue_created": false,
+  "cloud_deployed": false
+}
