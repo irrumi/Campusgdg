@@ -8,8 +8,9 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr | None = Field(default=None, repr=False)
     google_cloud_project: str | None = None
     google_cloud_location: str = "us-central1"
+    gemini_location: str = "global"
     google_genai_use_vertexai: bool = False
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.8-flash"
     github_token: SecretStr | None = Field(default=None, repr=False)
     github_mcp_url: str = "https://api.githubcopilot.com/mcp/"
     database_path: str = "data/campuspulse.sqlite3"
@@ -20,8 +21,9 @@ class Settings(BaseSettings):
 
     @property
     def gemini_configured(self) -> bool:
-        return bool(self.gemini_api_key or (self.google_genai_use_vertexai and self.google_cloud_project))
+        return bool((self.gemini_api_key and self.gemini_api_key.get_secret_value())
+                    or (self.google_genai_use_vertexai and self.google_cloud_project))
 
     @property
     def github_configured(self) -> bool:
-        return bool(self.github_token)
+        return bool(self.github_token and self.github_token.get_secret_value())

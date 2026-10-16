@@ -5,7 +5,7 @@
   "topology": "hierarchical-mesh",
   "strategy": "specialized",
   "worker_count": 10,
-  "execution": "Claude Code headless sessions linked to Ruflo agent and task records",
+  "execution": "Native Codex workers linked to Ruflo agent and task records; initial Claude Code attempts failed due to expired OAuth",
   "concurrency": 3,
   "shared_memory": "Ruflo campuspulse namespace plus versioned docs/CONTRACT.md",
   "workers": [
