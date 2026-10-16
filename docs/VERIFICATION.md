@@ -18,7 +18,8 @@ The commit containing this document includes the checked source and test logs.
 | Real Issue creation | Not performed; no live proposal was approved | Write flag remains disabled |
 | Cloud SDK/package | Local source allowlist and installed SDK validation passed; no cloud request | [Dry run](../artifacts/cloud-dry-run.json) |
 | Agent Engine deployment/invocation | Not performed; Google Cloud ADC and project IAM access unavailable | [Deployment prerequisites](DEPLOYMENT.md) |
-| GitHub delivery | Local implementation prepared; external push/PR requires user approval | Branch `feat/campuspulse-guardian` |
+| GitHub delivery | User-approved branch push and draft PR completed; remote SHA and author/committer account verified | [PR #1](https://github.com/irrumi/Campusgdg/pull/1), [delivery record](../artifacts/github-delivery.json) |
+| GitHub Actions | Offline checks passed for implementation `28257ca` on Linux | [Run](https://github.com/irrumi/Campusgdg/actions/runs/38951926590) |
 | Development swarm | Ten actual workers, at most three concurrent; nine tasks accepted, cloud task awaiting external access | [Ruflo snapshot](../artifacts/swarm-final.json), [coordination](SWARM.md) |
 
 The browser screenshot records the earlier generic extraction error. The final
@@ -75,4 +76,7 @@ usage were unavailable. No billing-cost total is claimed.
 - `campusgdg-511817` identifies a Cloud project; the local AI Studio key supplies
   neither ADC nor project IAM permission. Deployment additionally needs the
   prepared runtime identity, secret access and cloud prerequisites in the runbook.
-- GitHub push/PR is a separate external action awaiting the user's approval.
+- The draft PR has been published with the user's approval. It has not been
+  merged. The first push was rejected by GitHub's private-email protection;
+  only the eight unpublished commits were rewritten with the verified account's
+  noreply address. Source trees stayed identical; no force push was used.

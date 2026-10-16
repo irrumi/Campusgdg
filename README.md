@@ -24,8 +24,9 @@ The full browser analysis remains incomplete because subsequent requests hit
 provider quota/rate limits (HTTP 429), including a control attempt after a pause.
 Cloud deployment and remote invocation remain blocked by Google Cloud
 authentication and project access. `campusgdg-511817` is the supplied
-project ID; it is not a credential or proof of IAM access. No real Issue write or
-GitHub push is recorded. [VERIFICATION.md](docs/VERIFICATION.md) is the canonical
+project ID; it is not a credential or proof of IAM access. No real Issue write is
+recorded. The implementation is published in [draft PR #1](https://github.com/irrumi/Campusgdg/pull/1),
+with a successful GitHub Actions run. [VERIFICATION.md](docs/VERIFICATION.md) is the canonical
 record of the final integrated tests, browser checks, artifacts, and remaining
 blockers; component test totals are deliberately not repeated here.
 
