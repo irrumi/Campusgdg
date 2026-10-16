@@ -2,9 +2,9 @@
 
 CampusPulse connects assignment requirements to repository evidence and keeps
 Issue creation behind approval of an exact proposal. This document describes the
-agreed integration design. The source of truth for interfaces is
-[CONTRACT.md](CONTRACT.md); `campuspulse/models.py` defines the shared data shapes.
-Runtime verification remains pending at the documentation worker's handoff.
+integrated implementation. [CONTRACT.md](CONTRACT.md) defines its interfaces;
+`campuspulse/models.py` defines the shared data shapes. Consult
+[VERIFICATION.md](VERIFICATION.md) for the current checks and remaining blockers.
 
 ## Product data flow
 
@@ -54,13 +54,14 @@ chain-of-thought or provider credentials.
 | `security.py` | Strict repository URL validation, canonical proposal hashing, and safe error messages. |
 | `config.py` / `models.py` | Central environment-backed settings and Pydantic schemas; changes require coordination. |
 | `static/` | Responsive HTML/CSS/JS; API consumption and safe text rendering. |
-| `cloud.py` | Planned Agent Engine wrapper around the real analysis agent, exposing analysis without Issue writes. |
+| `cloud.py` | `GuardianCloudAgent.async_query(document, repository_url)` wraps the real analysis agent and exposes no Issue-writing method. |
 
 Gemini is responsible for extraction, tool selection, and classification. The
 application enforces tool budgets, data validation, authorization, and write state.
-GitHub access uses the official remote MCP endpoint configured by
-`Settings.github_mcp_url`; it must discover and validate supported tool schemas.
-A REST replacement must not be reported as MCP integration.
+GitHub access uses `https://api.githubcopilot.com/mcp/`. The gateway rejects other
+endpoint values, discovers tools, checks their schemas and read-only annotations,
+and validates arguments before calling them. The model cannot override the selected
+repository or call arbitrary MCP methods. No REST fallback substitutes for MCP.
 
 ## Evidence and persistence
 
@@ -76,14 +77,16 @@ ProposedAction = requirement_id + repository + title + body + proposal_hash + st
 IssueReceipt = number + URL + exact title/body + verified flag
 ```
 
-`DocumentPage.number` and `SourceReference.page` are one-based. For formats without
-stable printed pages, the parser's numbered source sections must be described as
-such rather than claimed as original page numbers. Extraction must reject quotes
-that do not match the cited source after whitespace normalization.
+`DocumentPage.number` and `SourceReference.page` are one-based. PDF references
+identify pages. DOCX references identify body paragraphs; TXT and Markdown use
+blank-line paragraphs. These paragraph numbers are not rendered page numbers.
+Extraction rejects quotes that do not match the cited source after whitespace
+normalization.
 
 Every evidence ID in a finding must resolve within the result. Positive and negative
-findings need supporting evidence; missing evidence is `unverified`. The eight-call
-budget bounds repository exploration, so completeness is not guaranteed.
+findings need supporting quotations; unsupported or ambiguous findings become
+`unverified`. Empty or partial listings do not prove absence. Invalid and failed
+calls also consume the eight-call budget, so completeness is not guaranteed.
 
 `AnalysisResult.live` is a field, not independent verification. A live claim needs
 actual upstream responses and recorded evidence; test fixtures must be identified
@@ -131,24 +134,51 @@ plaintext token loses access through this interface.
 Errors use `{detail: string}` with 400 for invalid input, 404 for inaccessible IDs,
 409 for conflicts, 413 for oversized uploads, 422 for schema validation, 503 for
 missing configuration, and 502 for upstream failure. Local development binds to
-`127.0.0.1`; no wildcard CORS is part of the contract.
+`127.0.0.1`. The request guard checks an exact `ALLOWED_HOSTS` list and rejects
+cross-origin mutations. Default hosts are `localhost`, `127.0.0.1`, and `[::1]`;
+there is no wildcard CORS. API responses use `Cache-Control: no-store`. These
+controls do not provide a multi-user identity or repository authorization system.
 
 ## Deployment and development boundaries
 
-The local FastAPI process serves the browser UI and persists to SQLite. Agent
-Engine is a separate cloud target for analysis, not evidence that the UI or database
-has been hosted. Cloud execution needs a real project, valid credentials, packaged
-dependencies, and a successful invocation of the deployed resource. These remain
-unverified until the cloud worker and coordinator record actual results.
+The local FastAPI process serves the browser UI and persists to SQLite. The cloud
+wrapper separately exposes `async_query` on an Agent Engine `reasoningEngines`
+resource. It constructs the real `GuardianAgent` at runtime, uses the runtime's
+Google identity, disables dotenv/API-key loading, and forces GitHub writes off.
 
-Ruflo coordinates ten development roles: architecture, parsing/extraction, GitHub
-MCP, Gemini agent, backend, frontend, cloud, storage, QA, and security. The
-coordinator integrates isolated worktrees. Codex executors perform the assigned
-development work in the current run. Ruflo registration, task execution, local
-tests, live services, GitHub delivery, and cloud deployment are separate evidence
-categories; none proves the next.
+`scripts/deploy.py` uses the pinned `google-cloud-agentplatform[agent_engines]==2.5.0`
+package and `agentplatform.Client(...).runtimes.create/get`. It packages an explicit
+allowlist of nine Python source files and `requirements-cloud.txt`, with a Secret
+Manager reference for the GitHub token. Credentials, databases, Git metadata,
+frontend assets, and local agent objects are not included. The optional Dockerfile
+serves the local web app; it does not deploy this cloud runtime.
+
+The [recorded dry run](../artifacts/cloud-dry-run.json) contacted no cloud service
+and checked no credentials. Project `campusgdg-511817` is supplied, but account
+authentication, ADC, and IAM access still block cloud deployment and invocation.
+Local Gemini uses the separately configured Developer API key.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the login, runtime identity,
+secret-access, source-deployment, and invocation steps. A deployed resource alone
+would not prove that the UI, SQLite, or external analysis is operational.
+
+Exactly ten native Codex workers ran the assigned development roles: architecture,
+parsing/extraction, GitHub MCP, Gemini agent, backend, frontend, cloud, storage, QA,
+and security. Ruflo 3.56.10 coordinated their agent/task records and isolated
+worktrees, with at most three workers active at a time. Initial Claude Code
+attempts failed because OAuth had expired; those failures are not implementation
+execution. The [task manifest](../artifacts/swarm-manifest.json) and
+[event log](../artifacts/ruflo-events.jsonl) link the development records.
+
+Ruflo registration, executor work, offline checks, live services, GitHub delivery,
+and cloud deployment remain separate evidence categories. Official MCP repository,
+file, Issues, and CI reads have [live evidence](../artifacts/live-github-mcp.json);
+that does not establish a successful Gemini analysis or Issue write.
 
 ## Definition of done
+
+These are acceptance gates, not a statement that all are complete. Final status
+belongs in [VERIFICATION.md](VERIFICATION.md); detailed test and security scope
+belong in [TESTING.md](TESTING.md) and [SECURITY.md](SECURITY.md).
 
 - All owned changes integrate against the central models and HTTP contract.
 - Local tests cover parsing, quote grounding, evidence references, token isolation,

@@ -1,0 +1,64 @@
+{
+  "date_utc": "2026-10-16",
+  "provider": "Gemini Developer API",
+  "model": "gemini-3.5-flash",
+  "sdk": "google-genai 2.31.0",
+  "source": "Coordinator observed real service responses; component checks are not full E2E.",
+  "extraction": {
+    "status": "passed",
+    "file": "examples/assignment.txt",
+    "requirements": [
+      {
+        "id": "REQ-1",
+        "title": "Document local setup commands in README.md",
+        "description": "The repository's README.md file must contain documentation for local setup commands.",
+        "source": {
+          "page": 1,
+          "quote": "Document local setup commands in README.md."
+        },
+        "ambiguity": null
+      },
+      {
+        "id": "REQ-2",
+        "title": "Successful continuous integration run",
+        "description": "Ensure that the latest continuous integration run completes successfully.",
+        "source": {
+          "page": 2,
+          "quote": "The latest continuous integration run must finish successfully."
+        },
+        "ambiguity": null
+      }
+    ]
+  },
+  "tool_selection": {
+    "status": "passed",
+    "functions": [
+      {
+        "name": "read_file",
+        "args": {
+          "path": "README.md"
+        }
+      },
+      {
+        "name": "read_ci",
+        "args": {}
+      }
+    ],
+    "total_token_count": 920
+  },
+  "full_browser_analysis": {
+    "status": "not_completed",
+    "last_provider_status": 429,
+    "last_observed_exception_chain": [
+      "ExtractionError",
+      "ClientError"
+    ],
+    "control_attempt_after_pause": "also_429",
+    "issue_created": false
+  },
+  "resolved_integration_errors": [
+    "Constrained schema requests rejected; switched to JSON MIME with schema instructions and strict local validation.",
+    "Function responses used unsupported tool role; corrected to user per Google documentation."
+  ],
+  "cost_reporting": "Only returned token counters recorded; billing cost and full session token usage unavailable."
+}

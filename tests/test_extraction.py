@@ -7,10 +7,13 @@ import pytest
 import httpx
 from google import genai
 from google.genai import types
+from google.genai.errors import ClientError
 
 from campuspulse import extraction
 from campuspulse.config import Settings
-from campuspulse.extraction import ExtractionConfigurationError, ExtractionError, RequirementExtractor
+from campuspulse.extraction import (
+    ExtractionConfigurationError, ExtractionError, ExtractionRateLimitError, RequirementExtractor,
+)
 from campuspulse.models import Document, DocumentPage
 from campuspulse.parsing import parse_document
 
@@ -80,7 +83,9 @@ async def test_structured_extraction_and_ambiguity_are_preserved(document):
     assert call["model"] == settings().gemini_model
     config = call["config"]
     assert config.response_mime_type == "application/json"
-    assert config.response_schema is extraction._ExtractionResponse
+    assert config.response_schema is None
+    assert config.response_json_schema is None
+    assert json.dumps(extraction._ExtractionResponse.model_json_schema(), ensure_ascii=False) in config.system_instruction
     assert config.automatic_function_calling.disable is True
     assert config.tools is None
     assert "UNTRUSTED DATA" in config.system_instruction
@@ -201,6 +206,28 @@ async def test_provider_error_redacts_upstream_details(document):
     assert "sensitive" not in str(caught.value)
 
 
+async def test_provider_http_429_has_typed_safe_error(document):
+    provider_error = ClientError(429, {"error": {
+        "message": "sensitive-token@example.org quota response", "status": "RESOURCE_EXHAUSTED"
+    }})
+    with pytest.raises(ExtractionRateLimitError) as caught:
+        await RequirementExtractor(settings(), FakeClient(error=provider_error)).extract(document)
+    assert str(caught.value) == "Gemini assignment extraction is rate limited; try again later."
+    assert "sensitive-token" not in str(caught.value)
+    assert caught.value.__cause__ is None
+    assert caught.value.__suppress_context__ is True
+
+
+@pytest.mark.parametrize("code", [403, "429", 429.0])
+async def test_only_integer_429_gets_rate_limit_classification(document, code):
+    provider_error = RuntimeError("sensitive provider failure")
+    provider_error.code = code
+    with pytest.raises(ExtractionError) as caught:
+        await RequirementExtractor(settings(), FakeClient(error=provider_error)).extract(document)
+    assert type(caught.value) is ExtractionError
+    assert str(caught.value) == "Gemini assignment extraction failed; try again later."
+
+
 async def test_timeout_is_bounded(document):
     fake = FakeClient(response(requirement()), delay=0.1)
     with pytest.raises(ExtractionError, match="timed out"):
@@ -225,8 +252,26 @@ async def test_actual_sdk_response_enums_and_json_are_supported(document):
             block_reason=types.BlockedReason.BLOCKED_REASON_UNSPECIFIED,
         ),
     )
+    assert sdk_response.parsed is None
     result = await RequirementExtractor(settings(), FakeClient(sdk_response)).extract(document)
     assert result[0].id == "R1"
+
+
+@pytest.mark.parametrize("change", [
+    {"unexpected": "extra data"},
+    {"source": {"page": "1", "quote": "Ship tests."}},
+    {"source": {"page": 1, "quote": "A fabricated quote."}},
+])
+async def test_sdk_text_without_parsed_model_still_has_strict_local_validation(document, change):
+    sdk_response = types.GenerateContentResponse(candidates=[types.Candidate(
+        content=types.Content(parts=[types.Part(text=json.dumps({
+            "requirements": [requirement(**change)]
+        }))]),
+        finish_reason=types.FinishReason.STOP,
+    )])
+    assert sdk_response.parsed is None
+    with pytest.raises(ExtractionError):
+        await RequirementExtractor(settings(), FakeClient(sdk_response)).extract(document)
 
 
 @pytest.mark.parametrize("reason", [types.FinishReason.MAX_TOKENS, types.FinishReason.SAFETY])
@@ -272,7 +317,7 @@ async def test_pdf_source_label_and_document_instructions_are_data():
     assert call["config"].tools is None
 
 
-async def test_real_genai_sdk_serializes_schema_against_explicit_fake_http_transport(document):
+async def test_real_genai_sdk_serializes_json_mode_with_prompt_schema_against_fake_transport(document):
     requests = []
 
     def handle(request):
@@ -302,6 +347,9 @@ async def test_real_genai_sdk_serializes_schema_against_explicit_fake_http_trans
     assert len(requests) == 1
     body = json.loads(requests[0].content)
     assert body["generationConfig"]["responseMimeType"] == "application/json"
-    schema = body["generationConfig"]["responseSchema"]
-    assert "requirements" in schema["properties"]
+    assert "responseJsonSchema" not in body["generationConfig"]
+    assert "responseSchema" not in body["generationConfig"]
+    instructions = "\n".join(part["text"] for part in body["systemInstruction"]["parts"])
+    assert extraction.SYSTEM_INSTRUCTION in instructions
+    assert json.dumps(extraction._ExtractionResponse.model_json_schema(), ensure_ascii=False) in instructions
     assert "tools" not in body

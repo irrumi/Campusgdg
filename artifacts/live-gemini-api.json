@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-10-16T18:23:08.870235+00:00",
+  "status": "response_received",
+  "provider": "Gemini Developer API",
+  "model": "gemini-3.5-flash",
+  "sdk": "google-genai",
+  "elapsed_seconds": 2.02,
+  "response": "CampusPulse Gemini connection verified.",
+  "usage": {
+    "cache_tokens_details": null,
+    "cached_content_token_count": null,
+    "candidates_token_count": 6,
+    "candidates_tokens_details": null,
+    "prompt_token_count": 11,
+    "prompt_tokens_details": [
+      {
+        "modality": "TEXT",
+        "token_count": 11
+      }
+    ],
+    "thoughts_token_count": 111,
+    "tool_use_prompt_token_count": null,
+    "tool_use_prompt_tokens_details": null,
+    "total_token_count": 128,
+    "traffic_type": null
+  }
+}

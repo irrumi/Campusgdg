@@ -39,6 +39,10 @@ class ExtractionConfigurationError(ExtractionError):
     """Gemini extraction is not configured."""
 
 
+class ExtractionRateLimitError(ExtractionError):
+    """Gemini explicitly rejected extraction with HTTP 429."""
+
+
 class _Source(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     page: int = Field(ge=1)
@@ -184,9 +188,16 @@ class RequirementExtractor:
                         model=self.settings.gemini_model,
                         contents=json.dumps(payload, ensure_ascii=False),
                         config=types.GenerateContentConfig(
-                            system_instruction=SYSTEM_INSTRUCTION,
+                            # JSON mode avoids provider-specific constrained
+                            # schema rejection. The full schema guides generation;
+                            # _read_response enforces it locally without weakening
+                            # extra-field, type, length, or citation validation.
+                            system_instruction=(
+                                SYSTEM_INSTRUCTION
+                                + "\nReturn one JSON object matching this schema:\n"
+                                + json.dumps(_ExtractionResponse.model_json_schema(), ensure_ascii=False)
+                            ),
                             response_mime_type="application/json",
-                            response_schema=_ExtractionResponse,
                             max_output_tokens=16_384,
                             automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                         ),
@@ -195,7 +206,12 @@ class RequirementExtractor:
                 )
             except TimeoutError:
                 raise ExtractionError("Gemini assignment extraction timed out.") from None
-            except Exception:
+            except Exception as exc:
+                code = getattr(exc, "code", None)
+                if type(code) is int and code == 429:
+                    raise ExtractionRateLimitError(
+                        "Gemini assignment extraction is rate limited; try again later."
+                    ) from None
                 raise ExtractionError("Gemini assignment extraction failed; try again later.") from None
             extraction = _read_response(response)
             if not extraction.requirements:

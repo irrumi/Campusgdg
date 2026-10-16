@@ -137,11 +137,16 @@ Return a concise final report. Do not claim cloud/live success.
     final = next((e for e in reversed(events) if e.get("type") == "result"), {})
     changes = subprocess.run(["git", "status", "--short"], cwd=worktree,
                              capture_output=True, text=True, check=True).stdout
-    ok = process.returncode == 0 and final.get("subtype") == "success" and bool(changes.strip())
+    usage = final.get("usage") or {}
+    executed = any(usage.get(key, 0) > 0 for key in (
+        "input_tokens", "output_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"
+    ))
+    ok = (process.returncode == 0 and not final.get("is_error", True)
+          and final.get("subtype") == "success" and executed and bool(changes.strip()))
     report = {"worker_id": worker["id"], "agent_id": worker["agent_id"], "task_id": worker["task_id"],
               "session_id": session_id, "exit_code": process.returncode, "branch": worker["branch"],
               "worktree": str(worktree), "changes": changes, "result": final,
-              "execution_verified": bool(events), "implementation_reported": ok,
+              "process_started": True, "execution_verified": executed, "implementation_reported": ok,
               "verification": "Requires coordinator review and integration tests",
               "stdout_sha256": hashlib.sha256(output_path.read_bytes()).hexdigest()}
     (ARTIFACTS / f"worker-{worker['id']}-report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")

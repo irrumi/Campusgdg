@@ -1,0 +1,24 @@
+{
+  "initialize": {
+    "protocolVersion": "2024-11-05",
+    "serverInfo": {
+      "name": "ruflo",
+      "version": "3.0.0"
+    },
+    "capabilities": {
+      "tools": {
+        "listChanged": true
+      },
+      "resources": {}
+    }
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "{\n  \"swarmId\": \"swarm-1792172579639-84jexv\",\n  \"status\": \"running\",\n  \"topology\": \"hierarchical-mesh\",\n  \"maxAgents\": 10,\n  \"agentCount\": 10,\n  \"taskCount\": 0,\n  \"config\": {\n    \"topology\": \"hierarchical-mesh\",\n    \"maxAgents\": 10,\n    \"strategy\": \"specialized\",\n    \"communicationProtocol\": \"message-bus\",\n    \"autoScaling\": true,\n    \"consensusMechanism\": \"majority\"\n  },\n  \"createdAt\": \"2026-10-16T17:42:59.639Z\",\n  \"updatedAt\": \"2026-10-16T17:42:59.639Z\",\n  \"totalSwarms\": 1\n}"
+      }
+    ],
+    "isError": false
+  }
+}

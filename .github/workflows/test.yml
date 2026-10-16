@@ -1,0 +1,39 @@
+name: Offline checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install application and test dependencies
+        run: python -m pip install -e ".[dev,cloud]"
+      - name: Lint Python
+        run: python -m ruff check .
+      - name: Run offline Python tests
+        run: |
+          mkdir -p tmp
+          export TMPDIR="$PWD/tmp"
+          python -m pytest -q --basetemp=tmp/pytest
+      - name: Check frontend modules
+        run: |
+          node --check campuspulse/static/client.mjs
+          node --check campuspulse/static/app.mjs
+          node --check campuspulse/static/bootstrap.js
+          node --test tests/frontend/*.test.mjs

@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     google_cloud_location: str = "us-central1"
     gemini_location: str = "global"
     google_genai_use_vertexai: bool = False
-    gemini_model: str = "gemini-3.8-flash"
+    gemini_model: str = "gemini-3.5-flash"
     github_token: SecretStr | None = Field(default=None, repr=False)
     github_mcp_url: str = "https://api.githubcopilot.com/mcp/"
     database_path: str = "data/campuspulse.sqlite3"

@@ -9,4 +9,3 @@
 Strict GitHub URL validation, canonical proposal hash matching storage, fixed error messages without provider imports. Found and verified source fixes for provider HTTP-error disclosure, DNS rebinding via untrusted Host, and coordinator's cloud blank-page regression. No credential reads or external actions.
 
 No worker commits, deployments or external writes. Coordinator integrated owned files and runs the combined suite separately.
-

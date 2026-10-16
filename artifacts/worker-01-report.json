@@ -1,0 +1,81 @@
+{
+  "worker_id": "01",
+  "agent_id": "campuspulse-01",
+  "task_id": "task-1792172664122-rt0itr",
+  "session_id": "75f7deb0-5170-4259-94e3-d0b1965c8f9e",
+  "exit_code": 1,
+  "branch": "swarm/worker-01",
+  "worktree": "C:\\Users\\irrumi\\Desktop\\campusgdg\\workers\\01",
+  "changes": "",
+  "result": {
+    "duration_api_ms": 0,
+    "stop_reason": "stop_sequence",
+    "session_id": "75f7deb0-5170-4259-94e3-d0b1965c8f9e",
+    "total_cost_usd": 0,
+    "usage": {
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "input_tokens": 0,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 0,
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "modelUsage": {},
+    "permission_denials": [],
+    "terminal_reason": "api_error",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "is_error": true,
+    "num_turns": 1,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "Failed to authenticate: OAuth session expired and could not be refreshed",
+    "type": "result",
+    "duration_ms": 216,
+    "uuid": "127aeb7c-cbb5-4153-9744-79ef02d6b168",
+    "queued_turn_count": 0,
+    "result_index": 0
+  },
+  "execution_verified": false,
+  "implementation_reported": false,
+  "verification": "Initial Claude attempt failed authentication before model execution. Native Codex implementation is recorded separately in worker-01-result.md.",
+  "stdout_sha256": "04cfacf9e30ccd2ecd9e112f0d34402503bef8164c85d04c310231dd909e68bd",
+  "process_started": true
+}

@@ -11,3 +11,4 @@ Implemented read-only actual Guardian wrapper, source allowlist, Secret Manager 
 
 No worker performed commits or external writes. The coordinator integrated the owned files. Initial Claude Code attempts for workers 01–03 failed before model execution because the existing OAuth session could not refresh; those attempt reports remain separate from these native execution receipts.
 
+Deployment and remote invocation remain unperformed: no verified Google Cloud ADC/IAM access. Gemini Developer API credentials only enable the local path. Ruflo cloud task remains in progress with this external blocker.

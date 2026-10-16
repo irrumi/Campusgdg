@@ -10,3 +10,4 @@ All HTTP routes, bounded upload parsing, assignment tokens, exact trusted hosts 
 
 No worker commits, deployments or external writes. Coordinator integrated owned files and runs the combined suite separately.
 
+Coordinator integration: explicit JS/MJS MIME handling and safe provider-category logging; actionable429 response mapping added. Final integrated checks are in local-checks.json.

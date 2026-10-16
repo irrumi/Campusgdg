@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import mimetypes
 from contextlib import contextmanager
 from types import SimpleNamespace
 
@@ -236,13 +237,31 @@ def test_analysis_missing_configuration_keeps_local_upload_available(system):
     assert response.status_code == 503
 
 
-def test_analysis_failure_is_safe_and_audited(system):
+@pytest.mark.parametrize("stage", ["extraction", "agent"])
+def test_provider_quota_has_actionable_safe_response(system, caplog, stage):
+    from campuspulse.agent import AgentRateLimitError
+    from campuspulse.extraction import ExtractionRateLimitError
+
+    error = ExtractionRateLimitError if stage == "extraction" else AgentRateLimitError
+    system.agent.error = error("secret=private-provider-detail")
+    original = upload(system).json()
+    response = system.client.post(f"/api/assignments/{original['assignment']['id']}/analyze",
+                                  headers={"X-Assignment-Token": original["token"]})
+    assert response.status_code == 429
+    assert "AI Studio limits" in response.json()["detail"]
+    assert "private-provider-detail" not in response.text + caplog.text
+    assert system.agent.calls == 1
+
+
+def test_analysis_failure_is_safe_and_audited(system, caplog):
     system.agent.error = RuntimeError("secret=super-private-provider-error")
     original = upload(system).json()
     assignment_id, token = original["assignment"]["id"], original["token"]
     headers = {"X-Assignment-Token": token}
     response = system.client.post(f"/api/assignments/{assignment_id}/analyze", headers=headers)
     assert response.status_code == 502
+    assert "RuntimeError" in caplog.text
+    assert "super-private" not in caplog.text
     assert "super-private" not in response.text
     events = system.client.get(f"/api/assignments/{assignment_id}/events", headers=headers)
     assert "super-private" not in events.text
@@ -459,3 +478,28 @@ def test_factory_and_module_app_do_not_initialize_settings_or_database(monkeypat
     monkeypatch.setattr(api, "Settings", forbidden)
     monkeypatch.setattr(api, "Store", forbidden)
     assert api.create_app() is not None
+
+
+@pytest.mark.parametrize("extension", [".mjs", ".js"])
+def test_static_javascript_mime_ignores_windows_registry(monkeypatch, tmp_path, extension):
+    import campuspulse.api as api
+
+    static = tmp_path / "static"
+    static.mkdir()
+    source = "export const serviceStatus = 'ready';\n"
+    (static / f"app{extension}").write_bytes(source.encode("utf-8"))
+    monkeypatch.setattr(api, "__file__", str(tmp_path / "api.py"))
+    mimetypes.init()
+    monkeypatch.setitem(mimetypes.types_map, extension, "text/plain")
+    assert mimetypes.guess_type(f"app{extension}")[0] == "text/plain"
+
+    with TestClient(api.create_app(Settings(_env_file=None)), base_url="http://localhost") as client:
+        response = client.get(f"/static/app{extension}")
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "text/javascript; charset=utf-8"
+        assert response.text == source
+        head = client.head(f"/static/app{extension}")
+        assert head.headers["content-type"] == response.headers["content-type"]
+        assert head.content == b""
+        cached = client.get(f"/static/app{extension}", headers={"If-None-Match": response.headers["etag"]})
+        assert cached.status_code == 304

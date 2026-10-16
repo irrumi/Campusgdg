@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 from google.genai import types
 
-from campuspulse.agent import AgentConfigurationError, AgentError, GuardianAgent, _Assessment
+from campuspulse.agent import AgentConfigurationError, AgentError, AgentRateLimitError, GuardianAgent, _Assessment
 from campuspulse.config import Settings
 from campuspulse.extraction import ExtractionConfigurationError, ExtractionError
 from campuspulse.github_mcp import GitHubConfigurationError, GitHubMCPError
@@ -158,13 +158,76 @@ async def test_real_sdk_function_call_and_structured_output_are_grounded():
     assert gateway.closed and not client.closed
     assert client.calls[1]["contents"][1].parts[0].thought_signature == b"preserve-original-signature"
     returned = client.calls[1]["contents"][2].parts[0].function_response
+    assert client.calls[1]["contents"][2].role == "user"
     assert returned.name == "read_file" and returned.id == "call-1"
     assert returned.response["untrusted_evidence"][0]["id"] == "e1"
     for call in client.calls:
         assert call["config"].automatic_function_calling.disable is True
         assert "UNTRUSTED DATA" in call["config"].system_instruction
     assert client.calls[-1]["config"].tools is None
-    assert client.calls[-1]["config"].response_schema is _Assessment
+    assert client.calls[-1]["config"].response_schema is None
+    assert client.calls[-1]["config"].response_json_schema is None
+    assert client.calls[-1]["config"].response_mime_type == "application/json"
+    assert json.dumps(_Assessment.model_json_schema()) in client.calls[-1]["config"].system_instruction
+
+
+async def test_real_sdk_serializes_full_function_continuation_and_final_json_mode():
+    """Exercise SDK serialization, not just config objects, without any network."""
+    import httpx
+    from google import genai
+
+    requests = []
+    responses = [
+        {"candidates": [{"content": {"role": "model", "parts": [{"functionCall": {
+            "name": "read_file", "args": {"path": "README.md"}, "id": "call-1"},
+            "thoughtSignature": "c2lnbmF0dXJl"}]},
+            "finishReason": "STOP"}]},
+        {"candidates": [{"content": {"role": "model", "parts": [
+            {"text": "Evidence collection is complete."}]}, "finishReason": "STOP"}]},
+        {"candidates": [{"content": {"role": "model", "parts": [
+            {"text": json.dumps({"findings": [decision()]})}]}, "finishReason": "STOP"}]},
+    ]
+
+    def transport(request):
+        requests.append(json.loads(request.content))
+        return httpx.Response(200, json=responses.pop(0))
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(transport)) as http_client:
+        client = genai.Client(api_key="offline-test-key", vertexai=False,
+                              http_options=types.HttpOptions(httpx_async_client=http_client))
+        try:
+            agent, _ = make_agent(client, max_tool_calls=2)
+            result = await agent.analyze(DOCUMENT, REPOSITORY)
+        finally:
+            await client.aio.aclose()
+            client.close()
+
+    assert result.findings[0].status == "satisfied"
+    assert result.live is False and len(requests) == 3
+    continuation = requests[1]["contents"]
+    assert [content["role"] for content in continuation] == ["user", "model", "user"]
+    model_part = continuation[1]["parts"][0]
+    assert model_part["thoughtSignature"] == "c2lnbmF0dXJl"
+    assert model_part["functionCall"]["id"] == "call-1"
+    assert model_part["functionCall"]["name"] == "read_file"
+    function_result = continuation[2]["parts"][0]["functionResponse"]
+    assert function_result["id"] == "call-1" and function_result["name"] == "read_file"
+    assert function_result["response"]["untrusted_evidence"][0]["id"] == "e1"
+    declarations = requests[0]["tools"][0]["functionDeclarations"]
+    assert len(declarations) == 4
+    for declaration in declarations:
+        assert "parameters" not in declaration
+        # SDK 2.31 uses the accepted proto field name here, rather than camelCase.
+        assert declaration["parameters_json_schema"]["additionalProperties"] is False
+    config = requests[2]["generationConfig"]
+    assert config["responseMimeType"] == "application/json"
+    assert "responseSchema" not in config
+    assert "responseJsonSchema" not in config
+    assert "response_schema" not in config and "response_json_schema" not in config
+    instructions = "".join(part["text"] for part in requests[2]["systemInstruction"]["parts"])
+    schema = json.loads(instructions.split("Required JSON output schema:\n", 1)[1])
+    assert schema == _Assessment.model_json_schema()
+    assert schema["additionalProperties"] is False
 
 
 @pytest.mark.parametrize("name,arguments,kind", [
@@ -275,6 +338,7 @@ async def test_unknown_or_duplicate_requirements_are_rejected(findings):
 @pytest.mark.parametrize("response", [
     SimpleNamespace(text="not JSON"), SimpleNamespace(text=""), SimpleNamespace(text='{"findings":[],"findings":[]}'),
     SimpleNamespace(parsed=None), output(decision(status="passed")),
+    output(decision(explanation="x" * 1201)),
     output(decision(source_url="https://github.com/example/campus")),
     read(), types.GenerateContentResponse(candidates=[]),
     types.GenerateContentResponse(candidates=[types.Candidate(finish_reason="MAX_TOKENS")]),
@@ -400,6 +464,34 @@ async def test_model_failures_are_typed_and_redacted(error):
         await agent.analyze(DOCUMENT, REPOSITORY)
     assert "secret-provider-token" not in str(caught.value)
     assert gateway.closed
+
+
+@pytest.mark.parametrize("phase", ["selection", "assessment"])
+async def test_sdk_numeric_429_is_typed_without_provider_details(phase):
+    from google.genai import errors
+
+    error = errors.ClientError(429, {"error": {
+        "message": "secret-provider-token private billing detail", "status": "RESOURCE_EXHAUSTED"}})
+    responses = [error] if phase == "selection" else [read(), error]
+    agent, gateway = make_agent(FakeClient(*responses), max_tool_calls=1)
+    with pytest.raises(AgentRateLimitError) as caught:
+        await agent.analyze(DOCUMENT, REPOSITORY)
+    assert isinstance(caught.value, AgentError)
+    assert str(caught.value) == "Gemini rate limit reached. Try again later."
+    assert "secret-provider-token" not in str(caught.value)
+    assert caught.value.__suppress_context__ is True
+    assert gateway.closed
+
+
+@pytest.mark.parametrize("code", ["429", 429.0, True, 503, None])
+async def test_only_exact_integer_429_gets_rate_limit_classification(code):
+    error = RuntimeError("secret-provider-token")
+    error.code = code
+    agent, _ = make_agent(FakeClient(error))
+    with pytest.raises(AgentError) as caught:
+        await agent.analyze(DOCUMENT, REPOSITORY)
+    assert type(caught.value) is AgentError
+    assert "secret-provider-token" not in str(caught.value)
 
 
 async def test_hanging_model_request_is_bounded():

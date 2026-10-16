@@ -1,0 +1,3 @@
+Document local setup commands in README.md.
+
+The latest continuous integration run must finish successfully.

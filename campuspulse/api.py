@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import hmac
+import logging
 import math
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -49,6 +50,30 @@ class UploadResponse(Model):
 
 class APIError(HTTPException):
     """Only fixed application-authored messages may be returned verbatim."""
+
+
+def _log_analysis_failure(exc: Exception) -> None:
+    """Record bounded error categories, never exception text, requests or secrets."""
+    categories = []
+    current: BaseException | None = exc
+    for _ in range(5):
+        if current is None:
+            break
+        code = getattr(current, "code", None)
+        categories.append((type(current).__name__, code if type(code) is int else None))
+        current = current.__context__
+    logging.getLogger(__name__).warning("Analysis failed: %s", categories)
+
+
+class FrontendFiles(StaticFiles):
+    """Serve JavaScript consistently even when Windows registers it as plain text."""
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        if isinstance(response, FileResponse) and Path(path).suffix.lower() in {".js", ".mjs"}:
+            response.media_type = "text/javascript"
+            response.headers["content-type"] = "text/javascript; charset=utf-8"
+        return response
 
 
 def _upload_limit(settings: Settings) -> int:
@@ -314,8 +339,8 @@ def create_app(settings=None, store=None, agent=None, gateway_factory=None) -> F
         config = runtime_settings()
         if supplied_agent is None and not (config.gemini_configured and config.github_configured):
             raise APIError(503, "Configure Gemini and GitHub MCP before analyzing assignments.")
-        from campuspulse.agent import AgentConfigurationError, GuardianAgent
-        from campuspulse.extraction import ExtractionConfigurationError
+        from campuspulse.agent import AgentConfigurationError, AgentRateLimitError, GuardianAgent
+        from campuspulse.extraction import ExtractionConfigurationError, ExtractionRateLimitError
 
         deadline = timeout()
         event(assignment_id, token, "analysis_started", "Repository analysis requested.")
@@ -325,10 +350,16 @@ def create_app(settings=None, store=None, agent=None, gateway_factory=None) -> F
             async with asyncio.timeout(deadline):
                 result = await agent.analyze(current.document, current.repository)
             saved = runtime_store().save_analysis(assignment_id, token, result)
+        except (AgentRateLimitError, ExtractionRateLimitError) as exc:
+            _log_analysis_failure(exc)
+            event(assignment_id, token, "analysis_failed", safe_error(exc))
+            raise APIError(429, safe_error(exc)) from None
         except (AgentConfigurationError, ExtractionConfigurationError, GitHubConfigurationError) as exc:
+            _log_analysis_failure(exc)
             event(assignment_id, token, "analysis_failed", safe_error(exc))
             raise APIError(503, safe_error(exc)) from None
         except Exception as exc:
+            _log_analysis_failure(exc)
             event(assignment_id, token, "analysis_failed", safe_error(exc))
             raise APIError(502, safe_error(exc)) from None
         event(assignment_id, token, "analysis_completed", "Analysis saved with its source references and evidence.")
@@ -412,7 +443,7 @@ def create_app(settings=None, store=None, agent=None, gateway_factory=None) -> F
         return runtime_store().list_events(assignment_id, token)
 
     static = Path(__file__).with_name("static")
-    application.mount("/static", StaticFiles(directory=static, check_dir=False), name="static")
+    application.mount("/static", FrontendFiles(directory=static, check_dir=False), name="static")
 
     @application.get("/", include_in_schema=False)
     async def index():
@@ -425,5 +456,3 @@ def create_app(settings=None, store=None, agent=None, gateway_factory=None) -> F
 
 
 app = create_app()
-
-

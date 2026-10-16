@@ -1,0 +1,20 @@
+✔ offline end-to-end client flow uses exact HTTP shapes and requires separate approval (23.485ms)
+✔ only HTTPS links on the exact GitHub host can become anchors (0.2766ms)
+✔ repository input rejects paths, queries, fragments, escapes and normalized traversal (0.2336ms)
+✔ invalid repository input never reaches the transport (0.5104ms)
+✔ approval requires literal true and an action from this assignment (0.4671ms)
+✔ ambiguous network failure remains locked after reload and permits only history reads (0.4754ms)
+✔ simultaneous approval clicks send at most one write (0.2801ms)
+✔ unreadable approval response and server conflicts never enable retry (0.406ms)
+✔ unconfigured services stay explicit and local upload still works (0.497ms)
+✔ 503 configuration errors preserve the parsed assignment session (0.3189ms)
+✔ missing or unknown findings remain unverified in checklist totals (0.7871ms)
+✔ corrupt session data is ignored and unavailable session storage does not lose active access (0.3812ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 133.3214

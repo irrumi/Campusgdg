@@ -64,6 +64,10 @@ def proposal_hash(repository: RepositoryRef, title: str, body: str) -> str:
 # when an optional provider dependency is absent. Never inspect exception text,
 # attributes, request/response objects, causes, notes, or exception-group members.
 _ERROR_MESSAGES: dict[tuple[str, str], str] = {
+    ("campuspulse.extraction", "ExtractionRateLimitError"):
+        "Gemini rate limit or quota reached. Wait before retrying and check your AI Studio limits.",
+    ("campuspulse.agent", "AgentRateLimitError"):
+        "Gemini rate limit or quota reached. Wait before retrying and check your AI Studio limits.",
     (__name__, "RepositoryValidationError"): _INVALID_REPOSITORY,
     ("campuspulse.parsing", "DocumentLimitError"):
         "The document exceeds the supported processing limits.",

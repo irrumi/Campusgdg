@@ -1,8 +1,15 @@
 # Demo runbook
 
-This runbook is for the integrated application. It has not been executed by the
-documentation worker. Use the [README](../README.md) setup commands only after the
-backend, frontend, parser, agent, gateway, and store have been integrated.
+Use the [README](../README.md) setup commands from the integrated repository.
+Check [VERIFICATION.md](VERIFICATION.md) before presenting: it records the current
+revision, completed tests, browser checks, and blockers. This runbook is a procedure,
+not evidence that every step has been performed.
+
+Real official GitHub MCP repository, file, Issues, and CI reads are recorded in
+[live-github-mcp.json](../artifacts/live-github-mcp.json). Gemini connection,
+extraction and tool selection returned real responses; a complete analysis is
+blocked by observed HTTP 429 responses. Cloud deployment/invocation and a real
+approved Issue write are not yet established.
 
 ## Prepare
 
@@ -55,9 +62,25 @@ Offline tests with explicitly injected Gemini/MCP fakes can demonstrate local
 control flow, proposal immutability, and duplicate prevention. Label that evidence
 as offline. It establishes neither model quality nor access to a GitHub repository.
 
-Cloud project configuration and credentials were unavailable at the documentation
-handoff. Present Agent Engine as a deployment target until an actual deployment and
-invocation exist. A local server or container does not establish cloud deployment.
+Project `campusgdg-511817` has been supplied. Authentication and access to that
+project are still required; its ID is neither a credential nor evidence of IAM
+permissions. With the Google Cloud CLI installed, the Windows helper starts the
+interactive ADC flow and stores its files under ignored `tmp/gcloud-config`:
+
+```powershell
+.\scripts\google_login.ps1
+```
+
+Use an account authorized for this project, and keep subsequent cloud commands in
+the same PowerShell session. For local Vertex-based analysis, set
+`GOOGLE_GENAI_USE_VERTEXAI=true` and `GOOGLE_CLOUD_PROJECT=campusgdg-511817`, and
+configure the server-side GitHub credential. The cloud runtime additionally needs
+its own identity and Secret Manager access. Follow [DEPLOYMENT.md](DEPLOYMENT.md)
+for the exact preparation, dry-run, deployment, and invocation commands.
+
+The [cloud dry-run artifact](../artifacts/cloud-dry-run.json) is local SDK/source
+packaging evidence. Present cloud deployment as unverified until an actual resource
+and successful invocation exist. A local server or container does not establish it.
 
 ## Manual verification after integration
 
@@ -83,6 +106,10 @@ Use a report with distinct rows; leave an unperformed check as **not run**.
 | Issue write | Exact approved proposal, action state, Issue URL, matching readback. |
 | Cloud | Project/region, deployed resource name, and invocation outcome. |
 | Development coordination | Ruflo task records and executor results for each role. |
+
+Write final outcomes in [VERIFICATION.md](VERIFICATION.md), with test scope in
+[TESTING.md](TESTING.md). Include the [security limitations](SECURITY.md) when
+explaining what the controls establish.
 
 Worker registration is not task completion. Passing offline tests is not live E2E.
 An Issue creation response without readback is not verified success. A deployment
