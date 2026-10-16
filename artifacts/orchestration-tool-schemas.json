@@ -1,0 +1,640 @@
+[
+  {
+    "name": "agent_spawn",
+    "description": "Spawn a Ruflo-tracked agent with cost attribution + memory persistence + swarm coordination. Use when native Task tool is wrong because you need (a) cost tracking per agent in the cost-tracking namespace, (b) cross-session learning via the patterns namespace, or (c) coordination with other agents in a swarm topology (hierarchical / mesh / consensus). For one-shot subtasks with no learning loop, native Task is fine. Pair with hooks_route to pick the right model first.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "agentType": {
+          "type": "string",
+          "description": "Type of agent to spawn"
+        },
+        "agentId": {
+          "type": "string",
+          "description": "Optional custom agent ID"
+        },
+        "swarmId": {
+          "type": "string",
+          "description": "Optional swarm to register the agent with (defaults to most-recent swarm)"
+        },
+        "config": {
+          "type": "object",
+          "description": "Agent configuration"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Agent domain"
+        },
+        "model": {
+          "type": "string",
+          "enum": [
+            "haiku",
+            "sonnet",
+            "opus",
+            "opus-4.7",
+            "inherit"
+          ],
+          "description": "Claude model alias (haiku=fast/cheap, sonnet=balanced, opus=current Opus 4.8, opus-4.7=prior Opus pin)"
+        },
+        "task": {
+          "type": "string",
+          "description": "Task description for intelligent model routing"
+        },
+        "memoryBase": {
+          "type": "string",
+          "description": "Opt-in: base .rvf memory file to fork a per-agent Copy-On-Write branch from (agenticow). When set, the agent gets an isolated ~162-byte COW branch instead of a full copy — promote on success, discard on terminate. Requires the optional `agenticow` dep; degrades to a no-op when absent or when CLAUDE_FLOW_NO_COW_MEMORY=1."
+        },
+        "memoryDimension": {
+          "type": "integer",
+          "description": "Vector dimension for the COW base (required only when memoryBase does not exist yet)"
+        }
+      },
+      "required": [
+        "agentType"
+      ]
+    }
+  },
+  {
+    "name": "agent_execute",
+    "description": "Run a task on a previously-spawned agent_spawn record via the Anthropic Messages API with that agent's configured model. Use when native Task tool is wrong because (a) you need the spawned agent's persistent config (model, instructions, cost-tracking attribution) to apply to this turn, (b) the result needs to feed back into the agent's lifecycle (taskCount, lastResult, swarm-coordinated state), or (c) you want explicit model routing via the spawn record's `model` field instead of inheriting. For one-shot Claude prompts without a tracked agent, native Task is fine. Requires ANTHROPIC_API_KEY in env.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "description": "ID of the spawned agent"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Task / prompt for the agent to execute"
+        },
+        "systemPrompt": {
+          "type": "string",
+          "description": "Optional system prompt (overrides agent default)"
+        },
+        "maxTokens": {
+          "type": "number",
+          "description": "Max output tokens (default 1024)"
+        },
+        "temperature": {
+          "type": "number",
+          "description": "Sampling temperature 0..1 (default 0.7)"
+        }
+      },
+      "required": [
+        "agentId",
+        "prompt"
+      ]
+    }
+  },
+  {
+    "name": "agent_terminate",
+    "description": "Remove a Ruflo-tracked agent from the registry and free its swarm slot. Use when you need to (a) clean up a spawned agent so its cost-tracking row finalizes, (b) reclaim a swarm-topology slot for another agent, or (c) end a stuck agent without restarting the whole swarm. For one-shot Task tool invocations that already self-terminate, this tool is not needed. Pair with agent_list first to confirm the agentId.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "description": "ID of agent to terminate"
+        },
+        "force": {
+          "type": "boolean",
+          "description": "Force immediate termination"
+        },
+        "promoteMemory": {
+          "type": "boolean",
+          "description": "When the agent has a per-agent COW memory branch (spawned with memoryBase), promote (merge) its edits into the shared base on terminate. Default false → discard the branch (throw its edits away). No-op when the agent has no branch."
+        }
+      },
+      "required": [
+        "agentId"
+      ]
+    }
+  },
+  {
+    "name": "agent_status",
+    "description": "Read the lifecycle state of a single tracked agent: idle/running/stopped, current taskCount, lastResult, model, health score. Use when native Task tool is wrong because you need agent-level state (status across turns, accumulated taskCount, last error, swarm coordination) rather than a one-shot response. For inspecting a Task you just ran, native Task output is fine. Pair with agent_list to find the agentId first.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "description": "ID of agent"
+        }
+      },
+      "required": [
+        "agentId"
+      ]
+    }
+  },
+  {
+    "name": "agent_list",
+    "description": "List every Ruflo-tracked agent in the registry with its type, model, status, and taskCount. Use when native Task tool is wrong because you need to see the swarm-wide agent inventory across turns (which agents exist, their roles, their cost-tracking handles) rather than spawn a new one-shot Task. Filter by status/domain/agentType if needed. For starting a fresh single-shot subagent, native Task is fine.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Filter by status"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Filter by domain"
+        },
+        "includeTerminated": {
+          "type": "boolean",
+          "description": "Include terminated agents"
+        }
+      }
+    }
+  },
+  {
+    "name": "agent_pool",
+    "description": "Manage a fixed-size warm pool of pre-spawned agents to skip cold-start cost on bursty workloads. Use when native Task is wrong because (a) you have a queue of similar tasks and want to amortize spawn latency, (b) cost-tracking wants stable agentIds across requests, or (c) swarm topology requires a known agent count at all times. For one-shot work, just call agent_spawn or native Task. Pool sizes and warm/idle thresholds are set per-pool.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "status",
+            "scale",
+            "drain",
+            "fill"
+          ],
+          "description": "Pool action"
+        },
+        "targetSize": {
+          "type": "number",
+          "description": "Target pool size (for scale action)"
+        },
+        "agentType": {
+          "type": "string",
+          "description": "Agent type filter"
+        }
+      },
+      "required": [
+        "action"
+      ]
+    }
+  },
+  {
+    "name": "agent_health",
+    "description": "Report measured agent_execute provider-call outcomes over the last 20 calls: API success-ratio health (0-1), error rate, and response-latency p50/p95. This does not measure task correctness. Agents with no observed calls have unknown health; registration is not proof of a running process. Native Task and hooks_post-task outcomes are not recorded here. Use when you need measured reliability for agents driven through agent_execute; native Task results are invisible to this tool, so inspect those directly.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "description": "Specific agent ID (optional)"
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Health threshold (0-1)"
+        }
+      }
+    }
+  },
+  {
+    "name": "agent_update",
+    "description": "Mutate a tracked agent's config (model, instructions, status, health) without re-spawning. Use when native Task tool is wrong because the agent already has accumulated state (taskCount, swarm membership, cost-tracking attribution) and you only need to tweak one field — for example, promoting an idle agent to running on a new task, or rotating its model from haiku to sonnet mid-loop. For a brand-new subagent, agent_spawn (or native Task) is the right call.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "description": "ID of agent"
+        },
+        "status": {
+          "type": "string",
+          "description": "New status"
+        },
+        "health": {
+          "type": "number",
+          "description": "Health value (0-1)"
+        },
+        "taskCount": {
+          "type": "number",
+          "description": "Task count"
+        },
+        "config": {
+          "type": "object",
+          "description": "Config updates"
+        }
+      },
+      "required": [
+        "agentId"
+      ]
+    }
+  },
+  {
+    "name": "agent_logs",
+    "description": "Return recorded activity-log entries for a tracked agent (idle/running history, last task result). Use when native Task tool is wrong because you need the agent's log across turns (what it did, last error/result, swarm context) rather than a one-shot Task transcript. For a Task you just ran, native Task output is fine. Pair with agent_list to find the agentId. (Hive-mind-spawned workers are resolved here too.) Today this returns the last task result as a synthetic entry — full per-agent activity logs land with hive worker execution wiring (ruvnet/ruflo#1916).",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "description": "ID of agent"
+        },
+        "tail": {
+          "type": "number",
+          "description": "Max recent entries to return (default 50)"
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ],
+          "description": "Minimum log level (currently advisory — entries are synthetic)"
+        },
+        "since": {
+          "type": "string",
+          "description": "Show logs since, e.g. \"1h\" / \"30m\" (currently advisory)"
+        }
+      },
+      "required": [
+        "agentId"
+      ]
+    }
+  },
+  {
+    "name": "swarm_init",
+    "description": "Initialize a swarm with persistent state tracking Use when native Task tool is wrong because you need multi-agent coordination — topology (hierarchical/mesh/star), consensus (raft/byzantine/gossip/crdt/quorum), shared memory namespace, or anti-drift gates. For independent one-shot subagents, native Task is fine; spawn each separately.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "topology": {
+          "type": "string",
+          "description": "Swarm topology type (hierarchical, mesh, hierarchical-mesh, ring, star, hybrid, adaptive, pheromone-adaptive)"
+        },
+        "maxAgents": {
+          "type": "number",
+          "description": "Maximum number of agents (1-50)"
+        },
+        "strategy": {
+          "type": "string",
+          "description": "Agent strategy (specialized, balanced, adaptive)"
+        },
+        "config": {
+          "type": "object",
+          "description": "Additional swarm configuration"
+        }
+      }
+    }
+  },
+  {
+    "name": "swarm_pheromone_update",
+    "description": "Record a normalized per-agent task outcome for a running pheromone-adaptive swarm. Use when a static agent pool is wrong because repeated task evidence should update role-aware EMA fitness and produce a bounded keep/suspend/reactivate decision; native Task has no persistent swarm eligibility gate.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "description": "Stable tracked agent identifier"
+        },
+        "role": {
+          "type": "string",
+          "description": "Agent role used for role-local normalization"
+        },
+        "taskSuccess": {
+          "type": "number",
+          "description": "Observed task success in [0,1]"
+        },
+        "normalizedLatency": {
+          "type": "number",
+          "description": "Latency divided by the configured budget, clamped to [0,1]"
+        },
+        "consensusAlignment": {
+          "type": "number",
+          "description": "Agreement with the accepted consensus in [0,1]"
+        }
+      },
+      "required": [
+        "agentId",
+        "role",
+        "taskSuccess",
+        "normalizedLatency",
+        "consensusAlignment"
+      ]
+    }
+  },
+  {
+    "name": "swarm_pheromone_status",
+    "description": "Inspect the threshold, safety configuration, per-agent EMA scores, and scheduling eligibility of the active pheromone-adaptive swarm. Use when aggregate swarm status is wrong because calibration requires the exact APSC threshold and per-agent evidence before switching from dry-run to live suspension.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "swarm_status",
+    "description": "Get swarm status from persistent state Use when native Task tool is wrong because you need multi-agent coordination — topology (hierarchical/mesh/star), consensus (raft/byzantine/gossip/crdt/quorum), shared memory namespace, or anti-drift gates. For independent one-shot subagents, native Task is fine; spawn each separately.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "swarmId": {
+          "type": "string",
+          "description": "Swarm ID (omit for most recent)"
+        }
+      }
+    }
+  },
+  {
+    "name": "swarm_shutdown",
+    "description": "Shutdown a swarm and update persistent state Use when native Task tool is wrong because you need multi-agent coordination — topology (hierarchical/mesh/star), consensus (raft/byzantine/gossip/crdt/quorum), shared memory namespace, or anti-drift gates. For independent one-shot subagents, native Task is fine; spawn each separately.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "swarmId": {
+          "type": "string",
+          "description": "Swarm ID to shutdown"
+        },
+        "graceful": {
+          "type": "boolean",
+          "description": "Graceful shutdown (default: true)"
+        }
+      }
+    }
+  },
+  {
+    "name": "swarm_health",
+    "description": "Check swarm health status with real state inspection Use when native Task tool is wrong because you need multi-agent coordination — topology (hierarchical/mesh/star), consensus (raft/byzantine/gossip/crdt/quorum), shared memory namespace, or anti-drift gates. For independent one-shot subagents, native Task is fine; spawn each separately.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "swarmId": {
+          "type": "string",
+          "description": "Swarm ID to check"
+        }
+      }
+    }
+  },
+  {
+    "name": "memory_store",
+    "description": "Persistent key-value store with vector embedding — survives across sessions and is searchable by meaning, not just by file path. Use when native Write is wrong because the data is not a file (e.g. a learned pattern, a decision, a budget config) AND you need to recall it later by semantic query, not by path. Defaults to namespace=\"default\". Upsert semantics: writing an existing key updates it (matching the CLI `memory store` default); pass `upsert: false` to force strict-insert instead.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Memory key (unique within namespace)"
+        },
+        "value": {
+          "description": "Value to store (string or object)"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace for organization (default: \"default\")"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Optional tags for filtering"
+        },
+        "ttl": {
+          "type": "number",
+          "description": "Time-to-live in seconds (optional)"
+        },
+        "upsert": {
+          "type": "boolean",
+          "description": "Update existing key instead of failing (default: true, matching CLI `memory store`; set false for strict-insert). #2775 parity."
+        },
+        "provenance_type": {
+          "type": "string",
+          "enum": [
+            "user_claim",
+            "agent_output",
+            "system_observation",
+            "tool_result",
+            "unknown"
+          ],
+          "description": "ADR-323: who/what produced this value, so shared-namespace retrieval can filter by trust level instead of conflating a user's stated claim with an agent's own output. Default: \"unknown\"."
+        }
+      },
+      "required": [
+        "key",
+        "value"
+      ]
+    }
+  },
+  {
+    "name": "task_create",
+    "description": "Create a new task Use when native TodoWrite is wrong because you need cross-session task persistence, agent assignment, dependency tracking, or completion analytics in the .swarm/memory.db. For in-session checklists native TodoWrite is simpler and faster.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Task type (feature, bugfix, research, refactor)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Task description"
+        },
+        "priority": {
+          "type": "string",
+          "description": "Task priority (low, normal, high, critical)"
+        },
+        "assignTo": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Agent IDs to assign"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Task tags"
+        }
+      },
+      "required": [
+        "type",
+        "description"
+      ]
+    }
+  },
+  {
+    "name": "task_status",
+    "description": "Get task status Use when native TodoWrite is wrong because you need cross-session task persistence, agent assignment, dependency tracking, or completion analytics in the .swarm/memory.db. For in-session checklists native TodoWrite is simpler and faster.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "Task ID"
+        }
+      },
+      "required": [
+        "taskId"
+      ]
+    }
+  },
+  {
+    "name": "task_list",
+    "description": "List all tasks Use when native TodoWrite is wrong because you need cross-session task persistence, agent assignment, dependency tracking, or completion analytics in the .swarm/memory.db. For in-session checklists native TodoWrite is simpler and faster.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Filter by status"
+        },
+        "type": {
+          "type": "string",
+          "description": "Filter by type"
+        },
+        "assignedTo": {
+          "type": "string",
+          "description": "Filter by assigned agent"
+        },
+        "priority": {
+          "type": "string",
+          "description": "Filter by priority"
+        },
+        "limit": {
+          "type": "number",
+          "description": "Max tasks to return"
+        }
+      }
+    }
+  },
+  {
+    "name": "task_complete",
+    "description": "Mark task as complete Use when native TodoWrite is wrong because you need cross-session task persistence, agent assignment, dependency tracking, or completion analytics in the .swarm/memory.db. For in-session checklists native TodoWrite is simpler and faster.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "Task ID"
+        },
+        "result": {
+          "type": "object",
+          "description": "Task result data"
+        }
+      },
+      "required": [
+        "taskId"
+      ]
+    }
+  },
+  {
+    "name": "task_update",
+    "description": "Update task status or progress Use when native TodoWrite is wrong because you need cross-session task persistence, agent assignment, dependency tracking, or completion analytics in the .swarm/memory.db. For in-session checklists native TodoWrite is simpler and faster.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "Task ID"
+        },
+        "status": {
+          "type": "string",
+          "description": "New status: pending, in_progress, completed, failed or cancelled"
+        },
+        "progress": {
+          "type": "number",
+          "description": "Progress percentage (0-100)"
+        },
+        "assignTo": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Agent IDs to assign"
+        },
+        "result": {
+          "type": "object",
+          "description": "Result data (e.g. the failure of a failed task)"
+        }
+      },
+      "required": [
+        "taskId"
+      ]
+    }
+  },
+  {
+    "name": "task_assign",
+    "description": "Assign a task to one or more agents Use when native TodoWrite is wrong because you need cross-session task persistence, agent assignment, dependency tracking, or completion analytics in the .swarm/memory.db. For in-session checklists native TodoWrite is simpler and faster.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "Task ID to assign"
+        },
+        "agentIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Agent IDs to assign"
+        },
+        "unassign": {
+          "type": "boolean",
+          "description": "Unassign all agents from task"
+        }
+      },
+      "required": [
+        "taskId"
+      ]
+    }
+  },
+  {
+    "name": "task_cancel",
+    "description": "Cancel a task Use when native TodoWrite is wrong because you need cross-session task persistence, agent assignment, dependency tracking, or completion analytics in the .swarm/memory.db. For in-session checklists native TodoWrite is simpler and faster.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "Task ID"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Cancellation reason"
+        }
+      },
+      "required": [
+        "taskId"
+      ]
+    }
+  },
+  {
+    "name": "task_retry",
+    "description": "Re-queue a failed/cancelled/completed task by cloning its spec into a fresh pending task (the original record is kept as history). Use when native TodoWrite is wrong because you need the original task's persisted spec (type, priority, assignees, tags) and a stable taskId chain across runs rather than hand-retyping a checklist item. For ad-hoc re-runs, native TodoWrite is fine.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "ID of the task to retry"
+        },
+        "resetState": {
+          "type": "boolean",
+          "description": "Reset progress/result on the new task (default true)"
+        }
+      },
+      "required": [
+        "taskId"
+      ]
+    }
+  },
+  {
+    "name": "task_summary",
+    "description": "Get a summary of all tasks by status Use when native TodoWrite is wrong because you need cross-session task persistence, agent assignment, dependency tracking, or completion analytics in the .swarm/memory.db. For in-session checklists native TodoWrite is simpler and faster.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  }
+]
