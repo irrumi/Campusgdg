@@ -16,7 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "pytest-asyncio>=0.25,<2", "ruff>=0.11,<1"]
-cloud = ["google-cloud-aiplatform[agent_engines]>=1.112,<2", "cloudpickle>=3,<4"]
+cloud = ["google-cloud-agentplatform[agent_engines]==2.5.0", "cloudpickle>=3,<4"]
 
 [tool.setuptools.packages.find]
 include = ["campuspulse*"]
