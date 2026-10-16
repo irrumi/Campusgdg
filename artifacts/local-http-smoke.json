@@ -1,0 +1,16 @@
+{
+  "transport": "real loopback HTTP, no service fakes",
+  "health": {
+    "status": "ok",
+    "mode": "unconfigured",
+    "gemini_configured": false,
+    "github_configured": false,
+    "allow_github_writes": false
+  },
+  "upload_status": 200,
+  "source_sections": 2,
+  "restore_status": 200,
+  "unauthorized_status": 404,
+  "analysis_without_credentials_status": 503,
+  "analysis_error": "Configure Gemini and GitHub MCP before analyzing assignments."
+}

@@ -108,6 +108,24 @@ async def test_invalid_document_rejected_before_agent(document):
         await wrapper.async_query(payload, "https://github.com/example/project")
 
 
+@pytest.mark.asyncio
+async def test_wrapper_preserves_blank_pdf_page_numbers(document):
+    class FakeAgent:
+        def __init__(self, _settings):
+            pass
+
+        async def analyze(self, parsed, _repository):
+            assert parsed.pages[0].text == ""
+            assert parsed.pages[1].number == 2
+            return result(live=False)
+
+    document.pages = [DocumentPage(number=1, text=""), DocumentPage(number=2, text="Include a README.")]
+    wrapper = GuardianCloudAgent(settings_factory=settings, agent_factory=FakeAgent,
+                                 repository_validator=repository_validator)
+    response = await wrapper.async_query(document.model_dump(), "https://github.com/example/project")
+    assert response["live"] is False
+
+
 def test_runtime_settings_ignores_dotenv_and_api_key(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     (tmp_path / ".env").write_text("GITHUB_TOKEN=must-not-be-loaded\n", encoding="utf-8")

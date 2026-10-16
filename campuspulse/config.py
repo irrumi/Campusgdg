@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     max_tool_calls: int = 8
     request_timeout_seconds: float = 60
     allow_github_writes: bool = False
+    allowed_hosts: list[str] = Field(default_factory=lambda: ["localhost", "127.0.0.1", "[::1]"])
 
     @property
     def gemini_configured(self) -> bool:

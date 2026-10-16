@@ -44,7 +44,7 @@ class GuardianCloudAgent:
         """Analyze an already parsed assignment; no Issue/write operation exists."""
         try:
             parsed = Document.model_validate(document)
-            if not parsed.filename or not parsed.sha256 or not all(page.text.strip() for page in parsed.pages):
+            if not parsed.filename or not parsed.sha256 or not any(page.text.strip() for page in parsed.pages):
                 raise ValueError
             if len({page.number for page in parsed.pages}) != len(parsed.pages):
                 raise ValueError
