@@ -40,6 +40,13 @@ export function summarize(analysis) {
 
 export function configuration(health) {
   if (!health) return { ready: false, writes: false, title: "Service status unavailable", message: "Check the local server connection. Upload and analysis availability could not be confirmed." };
+  if (health.analysis_backend === "vertex") {
+    const ready = health.analysis_configured === true;
+    return { ready, writes: health.allow_github_writes === true && health.github_configured === true,
+      title: ready ? "Cloud analysis configured" : "Cloud analysis needs configuration",
+      message: ready ? "Analysis runs in Vertex AI. Access is checked when you analyze; uploads are parsed on this server."
+        : "Configure the cloud agent on the server to analyze. You can still upload and read your assignment." };
+  }
   const missing = [];
   if (health.gemini_configured !== true) missing.push("Gemini");
   if (health.github_configured !== true) missing.push("GitHub MCP");

@@ -118,6 +118,88 @@ and evidence links. An offline result is rejected. Provider failures return a
 safe message rather than credentials or raw request content. No write method is
 available through this cloud API.
 
+## Connect the web interface to the deployed agent
+
+Install Python 3.12+ and the cloud extra on the machine serving FastAPI. The
+browser continues to use the same assignment routes; the server forwards analysis
+to Agent Runtime. Its caller uses ADC and needs query access to the deployed
+resource. Gemini and GitHub read credentials belong to the cloud runtime; the web
+server does not need either token for cloud analysis.
+
+After deployment, run in PowerShell from the project root:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[dev,cloud]"
+$deployment = Get-Content -LiteralPath data/cloud-deployment.json -Raw | ConvertFrom-Json
+if ($deployment.status -ne "deployed") { throw "Inspect the deployment before starting cloud analysis." }
+$env:ANALYSIS_BACKEND = "vertex"
+$env:VERTEX_AGENT_RESOURCE = $deployment.resource_name
+$env:REQUEST_TIMEOUT_SECONDS = "300"
+$env:ALLOW_GITHUB_WRITES = "false"
+.\.venv\Scripts\python.exe -m uvicorn campuspulse.api:app --host 127.0.0.1 --port 8000
+```
+
+Open http://127.0.0.1:8000, upload a real assignment and analyze its repository.
+The service badge identifies Vertex AI. The existing checklist, evidence and
+tool-activity views render the remote result. `/api/health` reports backend and
+configuration only; it makes no cloud request and does not prove ADC/IAM access.
+The server rejects invalid resource names, unexpected remote operation schemas,
+invalid analysis JSON and offline responses. Errors never switch to a local agent.
+The request timeout bounds the remote call; it is not a cancellation guarantee for
+work already running in Google Cloud. No automatic remote retry is performed.
+
+For subsequent sessions, put `ANALYSIS_BACKEND=vertex`, the full
+`VERTEX_AGENT_RESOURCE` and `REQUEST_TIMEOUT_SECONDS=300` in your local `.env`.
+Keep `ALLOW_GITHUB_WRITES=false` for the read-only demo. The optional approved
+Issue-write flow still requires a separately configured local GitHub token.
+Selecting `ANALYSIS_BACKEND=local` deliberately restores the original execution
+mode. Merely setting `GOOGLE_GENAI_USE_VERTEXAI=true` selects Vertex for model
+inference; it does not move the agent runtime to Agent Engine.
+
+### Access handoff
+
+The user/admin must provide or prepare:
+
+- The project ID (currently proposed: `campusgdg-511817`) with active billing,
+  enabled Vertex AI and Secret Manager APIs, regional capacity and model access.
+- Interactive ADC login on the deployment/web host with a Google account that has
+  `roles/aiplatform.user` on the project, `roles/iam.serviceAccountUser` on the
+  chosen runtime service account, and `roles/serviceusage.serviceUsageConsumer`
+  on the quota project when required. An admin can enable APIs beforehand rather
+  than granting API-enablement permission to the deployer.
+- A dedicated runtime service account with `roles/aiplatform.user` for Gemini and
+  access to the specific GitHub secret. Complete Google-managed service-agent
+  permissions as described in the access section above.
+- A Secret Manager secret ID and pinned numeric version holding a GitHub token
+  with read access to the target repositories (Contents, Issues, Actions and
+  Metadata as needed). Do not send the token or service-account keys in chat.
+- After deployment, the full reasoningEngines resource name; the state JSON stores
+  it automatically. The web host's ADC identity needs permission to query it.
+
+An administrator can prepare billing, IAM and secrets in the Cloud Console.
+No Owner/Editor role or downloaded service-account JSON key is needed by the app.
+The included commands do not grant IAM roles or create secrets automatically.
+
+### Costs
+
+This is a metered Google Cloud service. Agent Runtime compute/memory, Gemini
+input/output tokens, and supporting services such as Secret Manager, logs and
+networking have separate pricing. The runtime Free Tier currently includes
+50 vCPU-hours and 100 GiB-hours per billing account per month; it does not include
+all model inference. Eligible new accounts have a $300/90-day trial, subject to
+Google's product restrictions. Neither offer guarantees a free project.
+
+The deployment config uses minimum zero and maximum two runtime instances.
+These settings limit scaling but are not a monetary spending cap. Set a billing
+budget and alerts before the demo; alerts do not stop spending automatically.
+Do not enable extra model/server instances to work around quota failures.
+
+Sources checked on 2026-10-17:
+
+- [Free Tier and trial conditions](https://docs.cloud.google.com/free/docs/free-cloud-features)
+- [Agent Platform pricing, including model and runtime charges](https://cloud.google.com/products/gemini-enterprise-agent-platform/pricing)
+- [Runtime identity and IAM setup](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/runtime/setup)
+
 ## Optional local web container
 
 The Dockerfile serves FastAPI and the UI; it is not used for Agent Engine source

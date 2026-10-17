@@ -35,13 +35,13 @@
 
     <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
     <div id="error" class="notice error" role="alert" hidden></div>
-    <div id="config-notice" class="config-notice" hidden><div><strong id="config-title">Services need configuration</strong><p id="config-message"></p></div><button id="refresh-health" class="text-button" type="button">Check again <span aria-hidden="true">↻</span></button></div>
+    <div id="config-notice" class="config-notice" hidden><div><strong id="config-title">Services need configuration</strong><p id="config-message"></p></div><button id="refresh-health" class="text-button" type="button" disabled>Check again <span aria-hidden="true">↻</span></button></div>
 
     <div class="workspace">
       <div class="primary-column">
         <details id="upload-panel" class="panel upload-panel" open>
           <summary><span><span class="eyebrow">START HERE</span><span class="section-title">Your assignment, connected.</span></span><span class="summary-chevron" aria-hidden="true">⌄</span></summary>
-          <form id="upload-form">
+          <form id="upload-form" novalidate>
             <div class="file-field" id="file-field">
               <svg class="file-icon" viewBox="0 0 48 54" fill="none" aria-hidden="true"><path d="M11 2h19l12 12v36a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V7a5 5 0 0 1 5-5Z"/><path d="M29 2v13h13M15 27h18M15 34h18M15 41h11"/></svg>
               <label for="assignment-file" class="file-label" id="file-label">Choose an assignment</label>
@@ -59,7 +59,7 @@
         <section class="panel checklist-panel" aria-labelledby="checklist-title" aria-busy="false" id="checklist-panel">
           <div class="section-heading"><div><p class="eyebrow">THE BIG PICTURE</p><h2 id="checklist-title">Requirement checklist</h2></div><span class="count-badge" id="requirement-count">—</span></div>
           <div id="assignment-context" class="assignment-context" hidden></div>
-          <div id="analysis-controls" class="analysis-controls" hidden><p id="analysis-help">Extract requirements and check real repository evidence.</p><button id="analyze-button" class="button primary" type="button">Analyze repository <span aria-hidden="true">↗</span></button></div>
+          <div id="analysis-controls" class="analysis-controls" hidden><p id="analysis-help">Extract requirements and check real repository evidence.</p><button id="analyze-button" class="button primary" type="button" disabled>Analyze repository <span aria-hidden="true">↗</span></button></div>
           <div id="analysis-progress" class="analysis-progress" role="status" hidden><span class="spinner" aria-hidden="true"></span><div><strong>Checking the brief and repository</strong><p>Gemini is gathering bounded evidence. This may take a moment.</p></div></div>
           <div id="coverage" class="coverage" hidden><div><strong id="coverage-label"></strong><span id="coverage-detail"></span></div><div id="coverage-bar" class="coverage-bar" role="img"><span id="coverage-satisfied"></span><span id="coverage-not-satisfied"></span><span id="coverage-unverified"></span></div></div>
           <div id="filters" class="filters" role="group" aria-label="Filter requirements" hidden></div>
