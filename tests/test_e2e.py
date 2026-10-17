@@ -30,7 +30,9 @@ async def test_unconfigured_app_remains_usable_locally_and_fails_analysis_clearl
             health = await client.get("/api/health")
             assert health.status_code == 200
             assert health.json() == {"status": "ok", "mode": "unconfigured", "gemini_configured": False,
-                                     "github_configured": False, "allow_github_writes": False}
+                                     "github_configured": False, "allow_github_writes": False,
+                                     "analysis_backend": "local", "analysis_configured": False,
+                                     "vertex_configured": False}
             uploaded = await client.post("/api/assignments",
                                          data={"repository_url": "https://github.com/offline-fixture/course-project"},
                                          files={"file": ("assignment.txt", sample.read_bytes(), "text/plain")})

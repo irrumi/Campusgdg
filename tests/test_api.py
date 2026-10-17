@@ -176,7 +176,9 @@ def test_health_contains_only_configuration_booleans_not_secrets(system):
     with TestClient(create_app(settings=settings, store=system.store), base_url="http://127.0.0.1") as client:
         response = client.get("/api/health")
     assert response.json() == {"status": "ok", "mode": "live", "gemini_configured": True,
-                               "github_configured": True, "allow_github_writes": False}
+                               "github_configured": True, "allow_github_writes": False,
+                               "analysis_backend": "local", "analysis_configured": True,
+                               "vertex_configured": False}
     assert "test-gemini-secret" not in response.text and "test-github-secret" not in response.text
 
 

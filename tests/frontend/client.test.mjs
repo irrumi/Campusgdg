@@ -153,6 +153,16 @@ test("503 configuration errors preserve the parsed assignment session", async ()
   assert.equal(client.session.token, token);
 });
 
+test("Vertex configuration enables cloud analysis without browser or local provider keys", () => {
+  const health = { analysis_backend: "vertex", analysis_configured: true, gemini_configured: false,
+    github_configured: false, allow_github_writes: true };
+  assert.equal(configuration(health).ready, true);
+  assert.equal(configuration(health).writes, false);
+  assert.match(configuration(health).message, /Vertex AI/);
+  assert.equal(configuration({ ...health, analysis_configured: false }).ready, false);
+  assert.match(configuration({ ...health, analysis_configured: false }).message, /upload/);
+});
+
 test("missing or unknown findings remain unverified in checklist totals", () => {
   const partial = { requirements: [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }], findings: [{ requirement_id: "a", status: "satisfied" }, { requirement_id: "b", status: "not_satisfied" }, { requirement_id: "d", status: "invented" }] };
   assert.deepEqual(summarize(partial), { total: 4, satisfied: 1, not_satisfied: 1, unverified: 2 });

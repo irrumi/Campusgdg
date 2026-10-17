@@ -1,0 +1,121 @@
+{
+  "mode": "dry-run",
+  "cloud_contacted": false,
+  "credentials_checked": false,
+  "config": {
+    "source_packages": [
+      "campuspulse/__init__.py",
+      "campuspulse/config.py",
+      "campuspulse/models.py",
+      "campuspulse/parsing.py",
+      "campuspulse/extraction.py",
+      "campuspulse/security.py",
+      "campuspulse/github_mcp.py",
+      "campuspulse/agent.py",
+      "campuspulse/cloud.py",
+      "requirements-cloud.txt"
+    ],
+    "entrypoint_module": "campuspulse.cloud",
+    "entrypoint_object": "root_agent",
+    "class_methods": [
+      {
+        "name": "async_query",
+        "api_mode": "async",
+        "description": "Read-only grounded assignment analysis using Gemini and GitHub MCP.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "document": {
+              "type": "object",
+              "description": "Parsed CampusPulse Document JSON."
+            },
+            "repository_url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "document",
+            "repository_url"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ],
+    "requirements_file": "requirements-cloud.txt",
+    "python_version": "3.12",
+    "display_name": "CampusPulse Assignment Guardian",
+    "description": "Read-only assignment analysis with Gemini and the official GitHub MCP server.",
+    "labels": {
+      "app": "campuspulse",
+      "mode": "read-only"
+    },
+    "agent_framework": "custom",
+    "service_account": "campuspulse-runtime@campusgdg-511817.iam.gserviceaccount.com",
+    "min_instances": 0,
+    "max_instances": 2,
+    "container_concurrency": 2,
+    "env_vars": {
+      "CAMPUSPULSE_PROJECT": "campusgdg-511817",
+      "GOOGLE_GENAI_USE_VERTEXAI": "true",
+      "GEMINI_MODEL": "gemini-3.8-flash",
+      "GEMINI_LOCATION": "global",
+      "ALLOW_GITHUB_WRITES": "false",
+      "GITHUB_TOKEN": {
+        "secret": "campuspulse-github",
+        "version": "1"
+      }
+    }
+  },
+  "source_manifest": [
+    {
+      "path": "campuspulse/__init__.py",
+      "bytes": 40,
+      "sha256": "82bc5c82bd28a8448528cf1ad02ef8ebb68e1790842caad98834ecda3bff8418"
+    },
+    {
+      "path": "campuspulse/config.py",
+      "bytes": 2032,
+      "sha256": "466ec05482d7e2272654ab8e9d93dfee4b65945c588ccb6745926b80be275561"
+    },
+    {
+      "path": "campuspulse/models.py",
+      "bytes": 3440,
+      "sha256": "6ffa60cbd07a93fd268ab2ee1de60247eebcea65b75e16b346b3087d3f7d5cbb"
+    },
+    {
+      "path": "campuspulse/parsing.py",
+      "bytes": 12627,
+      "sha256": "e7c0bf5eeb68c794fe2b6f2dccff02df8a12f60f53a96aa63cb30c73a1fab00a"
+    },
+    {
+      "path": "campuspulse/extraction.py",
+      "bytes": 12152,
+      "sha256": "da1828aed29980e994a3761f0df1025ebd51854325d3c893caab01e716dfc866"
+    },
+    {
+      "path": "campuspulse/security.py",
+      "bytes": 5598,
+      "sha256": "2cd0a335cd374bff91f623b4695b48b0fdf2501c85df98b1d71ea03d05b52e23"
+    },
+    {
+      "path": "campuspulse/github_mcp.py",
+      "bytes": 25760,
+      "sha256": "599990fb07eff47be1cee25186513190c354660b037fcc08743c24856faebb12"
+    },
+    {
+      "path": "campuspulse/agent.py",
+      "bytes": 27219,
+      "sha256": "14ad056740a7b811155a2510eede7e6734b068a3eb1ca9144d276feaad051e64"
+    },
+    {
+      "path": "campuspulse/cloud.py",
+      "bytes": 4338,
+      "sha256": "367e8acbb70c81767e734de6b57e1aabbccc87bfc80071b0c2e3f2fbaabdf3c3"
+    },
+    {
+      "path": "requirements-cloud.txt",
+      "bytes": 279,
+      "sha256": "b18db1f88926720be169f1d34f1a2d199eb44fa2d4ba5d321549b7739cbd2724"
+    }
+  ]
+}

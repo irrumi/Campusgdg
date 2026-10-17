@@ -6,7 +6,7 @@ WORKDIR /app
 COPY pyproject.toml /app/pyproject.toml
 COPY campuspulse/*.py /app/campuspulse/
 COPY campuspulse/static/ /app/campuspulse/static/
-RUN pip install --no-cache-dir . && useradd --create-home --uid 10001 campuspulse \
+RUN pip install --no-cache-dir '.[cloud]' && useradd --create-home --uid 10001 campuspulse \
     && mkdir -p /app/data && chown campuspulse:campuspulse /app/data
 USER campuspulse
 EXPOSE 8080

@@ -9,6 +9,12 @@ server through the MCP Python SDK, FastAPI, and SQLite. The cloud wrapper target
 an Agent Engine `reasoningEngines` resource. Ruflo coordinates development;
 the product's analysis agent runs on Gemini.
 
+The web API supports `ANALYSIS_BACKEND=vertex` with a full
+`VERTEX_AGENT_RESOURCE` name. In that mode it calls the deployed agent using
+server-side ADC and renders the remote checklist and tool steps in the existing
+UI. See [web connection, required access and costs](docs/DEPLOYMENT.md#connect-the-web-interface-to-the-deployed-agent).
+This capability does not establish a successful live deployment.
+
 ## Verification status
 
 The core implementation has passed offline component checks. Real repository,

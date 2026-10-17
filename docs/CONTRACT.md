@@ -61,6 +61,10 @@ Module contracts (async methods unless marked sync):
 ## HTTP contract
 
 * GET /api/health -> status, mode, configured service booleans, no secrets.
+  Also exposes analysis_backend (local/vertex), analysis_configured and
+  vertex_configured. These describe configuration, not verified cloud access.
+  In vertex mode analysis uses server ADC and VERTEX_AGENT_RESOURCE; local Gemini
+  and GitHub credentials are not required. Remote failure never falls back locally.
 * POST /api/assignments multipart file + repository_url ->
   {assignment: Assignment, token: string}; local parse only.
 * GET /api/assignments/{id} -> Assignment.

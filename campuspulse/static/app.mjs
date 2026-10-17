@@ -1,4 +1,4 @@
-import { GuardianClient, STATUS_LABELS, configuration, safeGitHubUrl, statusFor, summarize } from "./client.mjs?v=20261016-1";
+import { GuardianClient, STATUS_LABELS, configuration, safeGitHubUrl, statusFor, summarize } from "./client.mjs?v=20261017-1";
 
 const $ = id => document.getElementById(id);
 let storage = null;
@@ -62,7 +62,8 @@ function updateApproval() {
 function renderHealth() {
   const config = configuration(state.health);
   $("service-status").classList.toggle("ready", config.ready);
-  $("service-label").textContent = state.health ? config.ready ? "Services configured" : "Setup needed" : "Status unavailable";
+  const readyLabel = state.health?.analysis_backend === "vertex" ? "Vertex AI configured" : "Services configured";
+  $("service-label").textContent = state.health ? config.ready ? readyLabel : "Setup needed" : "Status unavailable";
   $("config-notice").hidden = config.ready && config.writes;
   $("config-title").textContent = config.title;
   $("config-message").textContent = config.message;
