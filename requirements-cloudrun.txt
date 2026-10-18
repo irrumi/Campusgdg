@@ -1,0 +1,6 @@
+google-cloud-aiplatform[agent_engines]==2.5.0
+google-genai==2.31.0
+fastapi==0.144.0
+uvicorn==0.54.0
+requests==2.34.2
+pypdf==6.21.1
