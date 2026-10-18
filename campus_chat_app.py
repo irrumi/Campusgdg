@@ -11,15 +11,17 @@ import streamlit as st
 
 
 def load_vertex_connection():
-  config_path = Path(__file__).with_name("vertex.config.json")
-  if not config_path.exists():
-    return {}
-  return json.loads(config_path.read_text(encoding="utf-8"))
+  connection = {}
+  for name in ("vertex.config.json", "agent.connection.json"):
+    config_path = Path(__file__).with_name(name)
+    if config_path.exists():
+      connection.update(json.loads(config_path.read_text(encoding="utf-8")))
+  return connection
 
 
 VERTEX_CONNECTION = load_vertex_connection()
 VERTEX_RESOURCE = VERTEX_CONNECTION.get("agent_engine_resource", "")
-DEFAULT_AGENT_URL = os.environ.get("AGENT_API_URL") or (
+DEFAULT_AGENT_URL = VERTEX_CONNECTION.get("api_url") or os.environ.get("AGENT_API_URL") or (
     "http://127.0.0.1:8000/api/v1/chat" if VERTEX_RESOURCE else ""
 )
 
@@ -396,8 +398,9 @@ def init_session_state():
     }
 
   # Apply the configured connection once to chats opened before Vertex setup.
-  if VERTEX_RESOURCE and not st.session_state.get("vertex_connection_applied"):
-    if not st.session_state.agent_settings.get("api_url", "").strip():
+  if VERTEX_RESOURCE and st.session_state.get("vertex_connection_applied") != DEFAULT_AGENT_URL:
+    previous_url = st.session_state.agent_settings.get("api_url", "").strip()
+    if not previous_url or previous_url.startswith(("http://127.0.0.1:8000/", "http://localhost:8000/")):
       st.session_state.agent_settings.update(
           api_url=DEFAULT_AGENT_URL,
           protocol="Custom Agent REST (JSON)",
@@ -406,7 +409,7 @@ def init_session_state():
     elif (st.session_state.agent_settings.get("api_url") == DEFAULT_AGENT_URL
           and st.session_state.agent_settings.get("agent_id") == "campusgdg-student-agent-v1"):
       st.session_state.agent_settings["agent_id"] = VERTEX_RESOURCE
-    st.session_state.vertex_connection_applied = True
+    st.session_state.vertex_connection_applied = DEFAULT_AGENT_URL
 
   # События календаря студента
   if "calendar_events" not in st.session_state:
@@ -959,7 +962,7 @@ def open_settings_dialog():
   current = st.session_state.agent_settings
 
   if VERTEX_RESOURCE:
-    st.info("Google Cloud Vertex AI Agent Engine настроен. Запросы идут через локальный API-шлюз с авторизацией Google Cloud.")
+    st.info("Google Cloud Vertex AI Agent Engine настроен. Для запросов используйте API-адрес ниже и ваш секретный ключ.")
     st.caption(f"Проект: {VERTEX_CONNECTION.get('project', '')}")
     st.code(VERTEX_RESOURCE, language=None)
     if st.button("Подключить настроенный Vertex AI агент", use_container_width=True):

@@ -1,0 +1,5 @@
+{
+  "api_url": "https://campus-agent-api-f2c6yodnta-uc.a.run.app/api/v1/chat",
+  "agent_engine_resource": "projects/601118732870/locations/us-central1/reasoningEngines/3854347082139697152",
+  "project": "project-49635439-1824-4699-90f"
+}

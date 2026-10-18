@@ -52,7 +52,7 @@ pip install -r requirements.txt
 streamlit run campus_chat_app.py
 ```
 In the UI open ⚙️ settings and enter:
-- **Agent API Endpoint URL**: the gateway URL ending in `/api/v1/chat` (provided to the jury privately)
+- **Agent API Endpoint URL**: prefilled from [agent.connection.json](agent.connection.json); use the hosted HTTPS address ending in `/api/v1/chat`
 - **API Key / Bearer Token**: the access key (provided privately)
 - Protocol: `Custom Agent REST (JSON)`
 
@@ -76,13 +76,17 @@ the gateway keeps only its SHA-256 hash (`CAMPUS_API_KEY_SHA256`).
    python -c "import secrets,hashlib; k='cp_'+secrets.token_urlsafe(32); print(k); print(hashlib.sha256(k.encode()).hexdigest())"
    ```
    Keep the key; use only the hash on the server.
-5. Deploy the gateway to Cloud Run (uses [Procfile](Procfile), no Docker needed):
+5. Put `CAMPUS_API_KEY_SHA256=<hash>` in the local `.env` file and deploy the gateway:
    ```
-   gcloud run deploy campuspulse-gateway --source . --region us-central1 --allow-unauthenticated \
-     --set-env-vars "CAMPUS_API_KEY_SHA256=<hash>,AGENT_ENGINE_RESOURCE=<resource_name>,GOOGLE_CLOUD_PROJECT=<PROJECT>"
-   gcloud projects add-iam-policy-binding <PROJECT> \
-     --member "serviceAccount:<PROJECT_NUMBER>-compute@developer.gserviceaccount.com" --role roles/aiplatform.user
+   python deploy_cloud_run.py
    ```
+   This uses local ADC and `vertex.config.json` (falling back to the portable
+   `agent.connection.json`), creates dedicated runtime/build service accounts,
+   and builds [Dockerfile.agent-api](Dockerfile.agent-api) in an isolated source
+   directory containing only the gateway code and requirements. The existing root
+   Dockerfile remains available for the Assignment Guardian app. No local `.env`,
+   ADC, or plaintext API key is uploaded. Deployment updates the portable connection
+   file with the public HTTPS endpoint. See [VERTEX_SETUP.md](VERTEX_SETUP.md).
 6. Run the gateway locally instead (optional): copy `.env.example` to `.env`, then
    `uvicorn agent.server:app --port 8000`.
 

@@ -10,11 +10,12 @@ import hmac
 import json
 import os
 import time
+from functools import lru_cache
 from collections import defaultdict, deque
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from agent.agent import CampusAgent
 
@@ -59,15 +60,32 @@ def require_key(request: Request):
 
 class ChatIn(BaseModel):
     message: str
-    history: list[dict] = []
-    student_context: dict = {}
+    history: list[dict] = Field(default_factory=list)
+    student_context: dict = Field(default_factory=dict)
 
     model_config = {"extra": "allow"}
 
 
+@lru_cache(maxsize=1)
+def get_remote_agent(resource: str):
+    import vertexai
+    from vertexai import agent_engines
+    parts = resource.split("/")
+    if len(parts) != 6 or parts[0] != "projects" or parts[2] != "locations" or parts[4] != "reasoningEngines":
+        raise RuntimeError("Invalid AGENT_ENGINE_RESOURCE")
+    vertexai.init(project=parts[1], location=parts[3])
+    return agent_engines.get(resource)
+
+
 @app.get("/api/v1/chat")
 def ping():
-    return {"status": "ok"}
+    resource = os.environ.get("AGENT_ENGINE_RESOURCE")
+    if resource:
+        try:
+            get_remote_agent(resource)
+        except Exception:
+            raise HTTPException(503, "Vertex AI agent unavailable") from None
+    return {"status": "ok", "backend": "vertex-agent-engine" if resource else "vertex-gemini"}
 
 
 @app.post("/api/v1/chat", dependencies=[Depends(require_key)])
@@ -77,8 +95,7 @@ def chat(body: ChatIn):
         raise HTTPException(413, "Message too long")
     resource = os.environ.get("AGENT_ENGINE_RESOURCE")
     if resource:
-        from vertexai import agent_engines
-        data = agent_engines.get(resource).query(
+        data = get_remote_agent(resource).query(
             message=body.message, history=body.history[-20:], student_context=body.student_context)
     else:
         _local = _local or CampusAgent()
