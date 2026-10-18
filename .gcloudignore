@@ -1,0 +1,5 @@
+.env
+vertex.config.json
+*.log
+.venv
+.git
