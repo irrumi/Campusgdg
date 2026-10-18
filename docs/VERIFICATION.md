@@ -1,5 +1,44 @@
 # Verification record
 
+## Vertex web integration — 2026-10-17
+
+The web API now selects a server-side Agent Engine adapter through
+`ANALYSIS_BACKEND=vertex` and `VERTEX_AGENT_RESOURCE`. The browser uses the same
+assignment routes and renders the returned analysis/tool steps. Local provider
+keys are not required for cloud analysis. Cloud errors do not fall back locally.
+
+Observed checks for this change:
+
+- Full offline Python suite: **683 passed**, two upstream deprecation warnings,
+  no skipped tests. Command: `.venv/Scripts/python.exe -m pytest -q
+  --basetemp=tmp/pytest-vertex-full`.
+- Focused cloud/API/e2e checks: **91 passed**. The new adapter tests use explicit
+  fake remote responses; they cover routing, persistence, operation schemas,
+  invalid/offline responses, redaction, missing configuration and timeout.
+- Frontend client suite: **13 passed**; bootstrap, application and client syntax
+  checks passed. Ruff and `git diff --check` passed.
+- Real installed Agent Platform SDK 2.5.0 schema validation and a deployment dry
+  run passed, without ADC or any cloud request. The proposed service account and
+  secret names in the [plan](../artifacts/vertex-cloud-dry-run.json) do not prove
+  that those resources exist.
+- Strict frontend static audit: zero findings;
+  [report](../artifacts/vertex-ui-audit.json).
+- Real browser: Vertex configuration notice, local text upload, enabled analysis
+  button, persisted source/activity and session restoration after home navigation
+  observed. [Screenshot](../artifacts/vertex-web.png). The resource used for this
+  browser check was an explicit non-live configuration; no analysis request was
+  sent to it. Browser loading was slow but upload returned HTTP 200.
+
+Windows sandbox restrictions caused earlier attempts to stall while creating
+local event-loop/test sockets. Re-running the offline checks with local socket
+access completed successfully. The temporary test/server processes were stopped.
+
+**Still unverified:** actual GCP deployment, runtime secret/IAM/model access,
+remote Gemini/MCP execution, and hosted web-client-to-cloud operation. Follow
+[the deployment/access runbook](DEPLOYMENT.md#connect-the-web-interface-to-the-deployed-agent).
+
+## Previous integrated verification — 2026-10-16
+
 Recorded on 2026-10-16 against the integrated `feat/campuspulse-guardian` worktree.
 The commit containing this document includes the checked source and test logs.
 

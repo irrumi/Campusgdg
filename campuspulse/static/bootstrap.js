@@ -4,7 +4,7 @@
   if (status) status.textContent = "Starting workspace";
   document.documentElement.dataset.campuspulseBoot = "loading";
 
-  import("./app.mjs?v=20261016-1").then(() => {
+  import("./app.mjs?v=20261017-1").then(() => {
     document.documentElement.dataset.campuspulseBoot = "ready";
   }).catch(() => {
     document.documentElement.dataset.campuspulseBoot = "failed";

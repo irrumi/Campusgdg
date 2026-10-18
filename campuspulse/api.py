@@ -20,6 +20,7 @@ from starlette.datastructures import UploadFile
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from campuspulse.config import Settings
+from campuspulse.cloud_client import VertexConfigurationError, VertexGuardianClient, VertexInvocationError
 from campuspulse.github_mcp import GitHubConfigurationError, GitHubGateway, GitHubWriteDisabledError
 from campuspulse.models import ActionProposal, Assignment, AuditEvent, IssueReceipt, Model, ProposedAction
 from campuspulse.parsing import MAX_UPLOAD_BYTES, DocumentLimitError, DocumentParseError, parse_document
@@ -298,7 +299,10 @@ def create_app(settings=None, store=None, agent=None, gateway_factory=None) -> F
         config = runtime_settings()
         return {
             "status": "ok",
-            "mode": "live" if config.gemini_configured and config.github_configured else "unconfigured",
+            "mode": "live" if config.analysis_configured else "unconfigured",
+            "analysis_backend": config.analysis_backend,
+            "analysis_configured": config.analysis_configured,
+            "vertex_configured": config.vertex_configured,
             "gemini_configured": config.gemini_configured,
             "github_configured": config.github_configured,
             "allow_github_writes": config.allow_github_writes,
@@ -337,8 +341,11 @@ def create_app(settings=None, store=None, agent=None, gateway_factory=None) -> F
         nonlocal agent
         current = load_assignment(assignment_id, token)
         config = runtime_settings()
-        if supplied_agent is None and not (config.gemini_configured and config.github_configured):
-            raise APIError(503, "Configure Gemini and GitHub MCP before analyzing assignments.")
+        if supplied_agent is None and not config.analysis_configured:
+            message = ("Configure VERTEX_AGENT_RESOURCE before analyzing assignments."
+                       if config.analysis_backend == "vertex"
+                       else "Configure Gemini and GitHub MCP before analyzing assignments.")
+            raise APIError(503, message)
         from campuspulse.agent import AgentConfigurationError, AgentRateLimitError, GuardianAgent
         from campuspulse.extraction import ExtractionConfigurationError, ExtractionRateLimitError
 
@@ -346,7 +353,8 @@ def create_app(settings=None, store=None, agent=None, gateway_factory=None) -> F
         event(assignment_id, token, "analysis_started", "Repository analysis requested.")
         try:
             if agent is None:
-                agent = GuardianAgent(config, gateway_factory=gateway_factory)
+                agent = (VertexGuardianClient(config) if config.analysis_backend == "vertex"
+                         else GuardianAgent(config, gateway_factory=gateway_factory))
             async with asyncio.timeout(deadline):
                 result = await agent.analyze(current.document, current.repository)
             saved = runtime_store().save_analysis(assignment_id, token, result)
@@ -354,6 +362,16 @@ def create_app(settings=None, store=None, agent=None, gateway_factory=None) -> F
             _log_analysis_failure(exc)
             event(assignment_id, token, "analysis_failed", safe_error(exc))
             raise APIError(429, safe_error(exc)) from None
+        except VertexConfigurationError as exc:
+            _log_analysis_failure(exc)
+            message = "Vertex AI needs the cloud SDK and a valid VERTEX_AGENT_RESOURCE. Check server setup."
+            event(assignment_id, token, "analysis_failed", message)
+            raise APIError(503, message) from None
+        except VertexInvocationError as exc:
+            _log_analysis_failure(exc)
+            message = "Vertex AI analysis failed. Check server credentials, cloud permissions and runtime logs."
+            event(assignment_id, token, "analysis_failed", message)
+            raise APIError(502, message) from None
         except (AgentConfigurationError, ExtractionConfigurationError, GitHubConfigurationError) as exc:
             _log_analysis_failure(exc)
             event(assignment_id, token, "analysis_failed", safe_error(exc))

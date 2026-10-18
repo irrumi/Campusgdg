@@ -1,4 +1,6 @@
 """Environment-backed settings, with secrets excluded from repr."""
+import re
+from typing import Literal
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -11,6 +13,8 @@ class Settings(BaseSettings):
     gemini_location: str = "global"
     google_genai_use_vertexai: bool = False
     gemini_model: str = "gemini-3.5-flash"
+    analysis_backend: Literal["local", "vertex"] = "local"
+    vertex_agent_resource: str | None = None
     github_token: SecretStr | None = Field(default=None, repr=False)
     github_mcp_url: str = "https://api.githubcopilot.com/mcp/"
     database_path: str = "data/campuspulse.sqlite3"
@@ -28,3 +32,16 @@ class Settings(BaseSettings):
     @property
     def github_configured(self) -> bool:
         return bool(self.github_token and self.github_token.get_secret_value())
+
+    @property
+    def vertex_configured(self) -> bool:
+        return bool(self.vertex_agent_resource and re.fullmatch(
+            r"projects/[a-zA-Z0-9-]+/locations/[a-z]+-[a-z]+[0-9]/reasoningEngines/[0-9]+",
+            self.vertex_agent_resource,
+        ))
+
+    @property
+    def analysis_configured(self) -> bool:
+        if self.analysis_backend == "vertex":
+            return self.vertex_configured
+        return self.gemini_configured and self.github_configured
