@@ -7,15 +7,16 @@ The server refuses to start without it. Requests are also rate-limited per clien
 """
 import hashlib
 import hmac
+import json
 import os
 import time
 from collections import defaultdict, deque
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
-import json
-from pathlib import Path
+from agent.agent import CampusAgent
 
 _root = Path(__file__).resolve().parent.parent
 if (_root / ".env").exists():
@@ -27,9 +28,6 @@ if (_root / "vertex.config.json").exists():
     _cfg = json.loads((_root / "vertex.config.json").read_text(encoding="utf-8"))
     os.environ.setdefault("GOOGLE_CLOUD_PROJECT", _cfg.get("project", ""))
     os.environ.setdefault("AGENT_ENGINE_RESOURCE", _cfg.get("agent_engine_resource", ""))
-
-from agent.agent import CampusAgent
-
 
 KEY_HASH = os.environ.get("CAMPUS_API_KEY_SHA256", "").lower()
 if not KEY_HASH and len(os.environ.get("CAMPUS_API_KEY", "")) >= 16:
