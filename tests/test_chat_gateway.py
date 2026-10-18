@@ -57,3 +57,26 @@ def test_authorized_request_uses_remote_agent_and_bounds_history(gateway, monkey
     assert response.status_code == 200
     assert response.json() == {"output": "test response", "steps": []}
     assert received == [{"message": "hello", "history": history[-20:], "student_context": {"tasks": []}}]
+
+
+def test_health_rechecks_provider_after_success(gateway, monkeypatch):
+    import sys
+
+    server, client = gateway
+    available = True
+    calls = []
+
+    def get(resource):
+        calls.append(resource)
+        if not available:
+            raise RuntimeError("private revoked access details")
+        return SimpleNamespace()
+
+    monkeypatch.setitem(sys.modules, "vertexai", SimpleNamespace(
+        init=lambda **kwargs: None, agent_engines=SimpleNamespace(get=get)))
+    assert client.get("/api/v1/chat").status_code == 200
+    available = False
+    response = client.get("/api/v1/chat")
+    assert response.status_code == 503
+    assert "private revoked" not in response.text
+    assert len(calls) == 2

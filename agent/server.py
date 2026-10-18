@@ -10,7 +10,6 @@ import hmac
 import json
 import os
 import time
-from functools import lru_cache
 from collections import defaultdict, deque
 from pathlib import Path
 
@@ -66,7 +65,6 @@ class ChatIn(BaseModel):
     model_config = {"extra": "allow"}
 
 
-@lru_cache(maxsize=1)
 def get_remote_agent(resource: str):
     import vertexai
     from vertexai import agent_engines

@@ -12,16 +12,22 @@ import streamlit as st
 
 def load_vertex_connection():
   connection = {}
-  for name in ("vertex.config.json", "agent.connection.json"):
+  for name in ("agent.connection.json", "vertex.config.json"):
     config_path = Path(__file__).with_name(name)
     if config_path.exists():
-      connection.update(json.loads(config_path.read_text(encoding="utf-8")))
+      configured = json.loads(config_path.read_text(encoding="utf-8"))
+      # A different local agent must not inherit the bundled gateway URL.
+      if (name == "vertex.config.json" and "api_url" not in configured
+          and configured.get("agent_engine_resource")
+          and configured["agent_engine_resource"] != connection.get("agent_engine_resource")):
+        connection.pop("api_url", None)
+      connection.update(configured)
   return connection
 
 
 VERTEX_CONNECTION = load_vertex_connection()
 VERTEX_RESOURCE = VERTEX_CONNECTION.get("agent_engine_resource", "")
-DEFAULT_AGENT_URL = VERTEX_CONNECTION.get("api_url") or os.environ.get("AGENT_API_URL") or (
+DEFAULT_AGENT_URL = os.environ.get("AGENT_API_URL") or VERTEX_CONNECTION.get("api_url") or (
     "http://127.0.0.1:8000/api/v1/chat" if VERTEX_RESOURCE else ""
 )
 
