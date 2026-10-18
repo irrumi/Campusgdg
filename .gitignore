@@ -28,3 +28,7 @@ htmlcov/
 .claude-flow/data/
 .claude-flow/logs/
 .claude-flow/sessions/
+
+vertex.config.json
+*.log
+notes/
