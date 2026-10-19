@@ -1,0 +1,17 @@
+{
+  "profile": "product-admin",
+  "sourceRoots": ["campus_chat_ui"],
+  "locale": "ru-RU",
+  "canonicalMap": "docs/CAMPUSGDG_UI.md",
+  "requiredCapabilities": ["Select/Listbox", "Date", "Form", "Scrollbar", "Toast", "CRUD"],
+  "ownership": {"Select/Listbox": "authored", "Date": "typed"},
+  "requiredCommands": ["unit", "lint"],
+  "commands": {
+    "unit": ".venv/Scripts/python.exe -m pytest tests/test_campus_chat_ui.py",
+    "lint": ".venv/Scripts/python.exe -m ruff check campus_chat_app.py tests/test_campus_chat_ui.py"
+  },
+  "evidence": {
+    "crudFullFlow": "tests/test_campus_chat_ui.py",
+    "failurePaths": "tests/test_campus_chat_ui.py"
+  }
+}

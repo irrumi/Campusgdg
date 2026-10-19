@@ -95,3 +95,43 @@ Backend selection is server-controlled through ANALYSIS_BACKEND. Health exposes
 configuration booleans and the backend name, never credentials or resource IDs.
 Client unit tests and HTTP integration tests cover the cloud configuration and
 error states. Browser testing provides separate evidence from these offline tests.
+
+## CampusGDG Streamlit surface
+
+`campus_chat_app.py` is a separate student workspace from the light CampusPulse
+FastAPI surface above. Its redesign follows the user's explicit dark-theme and
+Russian-language brief; the existing CampusPulse tokens and English UI stay intact.
+
+The reference is a quiet study desk on a small laptop: the nearest due date has
+priority, today's schedule and open tasks follow, and chat is a focused workspace.
+Avoid decorative gradients, glows, emoji navigation and repeated bordered shells.
+
+Runtime token owner: `campus_chat_ui/styles.css`, loaded by `CUSTOM_CSS` in
+`campus_chat_app.py`. Streamlit's native theme
+adapter is `.streamlit/config.toml`: background `#10151d`, surface `#181f2a`, text
+`#eef2f8`, primary accent `#8ab8fa`. Primary action fill is `#3667ad` with white text;
+muted text `#a9b7c9`, raised surface `#202a38`, borders `#354257`.
+
+Use the installed Segoe UI/sans-serif stack for Cyrillic, 32px page headings,
+21px section headings, 16px body/input text and 14px secondary labels. Numerals
+in calendar/time use tabular figures. Shared controls have a 10px radius and 42px
+minimum button height; content groups use 12–14px radii. Spacing uses 8/12/16/24px.
+No external font request is required. Material icons come from Streamlit.
+
+The workspace max width is 1180px; gutters reduce at 900px and 640px. At phone
+width columns stack in content order. Only chat history has a bounded viewport
+height; the composer remains in normal document flow, including split mode.
+Native Streamlit controls own focus, keyboard behavior and popups. Global visible
+focus, wrapping, scrollbars, reduced motion and forced colors are CSS concerns.
+
+Behavior and component ownership are recorded in `docs/CAMPUSGDG_UI.md`. Inline
+feedback carries errors, pending requests and connection state; samples always have
+text labels. Dates display in Russian, typed dates use DD.MM.YYYY, and current dates
+use Asia/Qyzylorda (UTC+5). Agent settings and existing session data are preserved.
+
+The CampusGDG sidebar follows the Gemini pattern: a subdued rounded new-dialog
+action, flat navigation rows with Material icons, a quiet recent-chat list with
+local title search, and settings at the bottom. Native Streamlit radio inputs keep
+selection and keyboard semantics beneath the row treatment. The sidebar surface is
+`#161d27`, its selected pill is `#273e5a`, and selected text is `#c6dfff`. Only the
+sidebar uses these variants; the main workspace and connection behavior stay intact.
