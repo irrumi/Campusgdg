@@ -1,0 +1,64 @@
+{
+  "calendar_events": [
+    {
+      "title": "Лекция: REST API",
+      "course": "Web-разработка",
+      "date": "2026-10-22",
+      "time": "10:00 - 11:30",
+      "location": "Аудитория 402",
+      "type": "lecture",
+      "_example": true
+    },
+    {
+      "title": "Семинар: Линейная алгебра",
+      "course": "Математика",
+      "date": "2026-10-23",
+      "time": "13:00 - 14:30",
+      "location": "Аудитория 215",
+      "type": "lecture",
+      "_example": true
+    },
+    {
+      "title": "Сдать REST API",
+      "course": "Web-разработка",
+      "date": "2026-10-24",
+      "time": "23:59",
+      "location": "Учебный репозиторий",
+      "type": "deadline",
+      "_example": true
+    },
+    {
+      "title": "Сдать HW 3",
+      "course": "Математика",
+      "date": "2026-10-26",
+      "time": "23:59",
+      "location": "Учебная платформа",
+      "type": "deadline",
+      "_example": true
+    }
+  ],
+  "student_tasks": [
+    {
+      "title": "REST API",
+      "course": "Web-разработка",
+      "due_date": "2026-10-24",
+      "hours": 3,
+      "priority": "Высокий",
+      "done": false,
+      "_example": true
+    },
+    {
+      "title": "HW 3",
+      "course": "Математика",
+      "due_date": "2026-10-26",
+      "hours": 2,
+      "priority": "Средний",
+      "done": false,
+      "_example": true
+    }
+  ],
+  "student_courses": [
+    {"name": "Web-разработка", "grade": "94%", "gpa": 4.0, "credits": 5, "_example": true},
+    {"name": "Математика", "grade": "89%", "gpa": 3.7, "credits": 5, "_example": true}
+  ]
+}

@@ -228,102 +228,16 @@ def init_session_state():
 
 
 def example_student_data():
-    today = today_local()
-    tomorrow = today + timedelta(days=1)
-    in_two_days = today + timedelta(days=2)
-    in_four_days = today + timedelta(days=4)
-    data = {
-        "calendar_events": [
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Лекция: Алгоритмы и структуры данных",
-                "course": "Computer Science",
-                "date": today.strftime("%Y-%m-%d"),
-                "time": "10:00 - 11:30",
-                "location": "Ауд. 402 / Google Meet",
-                "type": "lecture",
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Семинар: Линейная алгебра и ML",
-                "course": "Математика",
-                "date": today.strftime("%Y-%m-%d"),
-                "time": "13:00 - 14:30",
-                "location": "Ауд. 215",
-                "type": "lecture",
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Сдача Лабораторной №3 (Графы и Дейкстра)",
-                "course": "Computer Science",
-                "date": tomorrow.strftime("%Y-%m-%d"),
-                "time": "23:59",
-                "location": "CampusGDG LMS",
-                "type": "deadline",
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Подготовка к коллоквиуму с ИИ-агентом",
-                "course": "Математика",
-                "date": in_two_days.strftime("%Y-%m-%d"),
-                "time": "18:00 - 19:30",
-                "location": "CampusGDG Study Hub",
-                "type": "study",
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Midterm Exam: Базы данных и SQL",
-                "course": "Базы данных",
-                "date": in_four_days.strftime("%Y-%m-%d"),
-                "time": "11:00 - 12:30",
-                "location": "Главный корпус, Ауд. 101",
-                "type": "exam",
-            },
-        ],
-        "student_tasks": [
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Реализовать алгоритм Дейкстры и оформить отчет",
-                "course": "Computer Science",
-                "due_date": tomorrow.strftime("%Y-%m-%d"),
-                "priority": "Высокий",
-                "done": False,
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Решить 10 задач по собственным векторам (ДЗ №4)",
-                "course": "Математика",
-                "due_date": in_two_days.strftime("%Y-%m-%d"),
-                "priority": "Высокий",
-                "done": False,
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Повторить нормализацию БД (1NF–BCNF) перед Midterm",
-                "course": "Базы данных",
-                "due_date": in_four_days.strftime("%Y-%m-%d"),
-                "priority": "Средний",
-                "done": False,
-            },
-            {
-                "id": str(uuid.uuid4()),
-                "title": "Прочитать статью по Attention Is All You Need",
-                "course": "AI & Deep Learning",
-                "due_date": today.strftime("%Y-%m-%d"),
-                "priority": "Низкий",
-                "done": True,
-            },
-        ],
-        "student_courses": [
-            {"name": "Computer Science", "grade": "94%", "gpa": 4.0, "credits": 5},
-            {"name": "Математика и ML", "grade": "89%", "gpa": 3.7, "credits": 5},
-            {"name": "Базы данных и SQL", "grade": "91%", "gpa": 3.9, "credits": 4},
-            {"name": "AI & Deep Learning", "grade": "96%", "gpa": 4.0, "credits": 4},
-        ],
-    }
-    for records in data.values():
+    # Fixed, explicitly labelled input fixtures shared with docs/test_schedule.*.
+    # Fresh IDs keep the loaded examples separate from existing session records.
+    data = json.loads(
+        (Path(__file__).parent / "campus_chat_ui" / "mock_data.json").read_text(encoding="utf-8")
+    )
+    for field, records in data.items():
         for record in records:
             record["_example"] = True
+            if field != "student_courses":
+                record["id"] = str(uuid.uuid4())
     return data
 
 
