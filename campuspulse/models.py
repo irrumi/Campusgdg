@@ -79,6 +79,8 @@ class AgentStep(Model):
     kind: Literal["extract", "decision", "tool", "verification", "error"]
     message: str
     tool: str | None = None
+    arguments: dict[str, Any] = Field(default_factory=dict)
+    result: dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=now)
 
 
@@ -132,3 +134,21 @@ class AuditEvent(Model):
     kind: str
     message: str
     timestamp: datetime = Field(default_factory=now)
+
+
+class DeadlineRequest(Model):
+    """Read-only review / planning request; calendar application remains local."""
+
+    action: Literal["analyze", "plan"]
+    repository_url: str = Field(max_length=164)
+    document_sha256: str = Field(default="", max_length=64)
+    analysis: AnalysisResult | None = None
+    estimates: dict[str, int] = Field(default_factory=dict, max_length=100)
+    start_at: str = Field(default="", max_length=40)
+    due_at: str = Field(default="", max_length=40)
+    day_start: str = Field(default="09:00", max_length=5)
+    day_end: str = Field(default="21:00", max_length=5)
+    daily_minutes: int = Field(default=240, ge=0, le=1440, strict=True)
+    day_limits: dict[str, int] = Field(default_factory=dict, max_length=32)
+    calendar_events: list[dict[str, Any]] = Field(default_factory=list, max_length=500)
+    previous_plan: dict[str, Any] | None = None

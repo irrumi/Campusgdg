@@ -6,6 +6,7 @@ exposed through MCP (mcp_server.py).
 from __future__ import annotations
 
 import os
+import math
 from datetime import date, datetime
 
 import requests
@@ -42,11 +43,15 @@ def plan_study_week(tasks: list[dict], hours_per_day: float = 4.0, start: str = 
         hours_per_day: Study hours available per day.
         start: Optional ISO start date, defaults to today.
     """
+    if not math.isfinite(hours_per_day) or hours_per_day <= 0 or len(tasks) > 100:
+        raise ValueError("Provide a positive daily capacity and at most 100 tasks.")
     cur = date.fromisoformat(start) if start else date.today()
     capacity: dict[str, float] = {}
     plan = []
     for t in sorted(tasks, key=lambda x: x.get("due", "9999-12-31")):
         remaining = float(t.get("hours", 1))
+        if not math.isfinite(remaining) or not 0 <= remaining <= 744 or remaining > hours_per_day * 366:
+            raise ValueError("Task effort must be finite and fit within a year of daily capacity.")
         due = date.fromisoformat(t["due"][:10]) if t.get("due") else None
         d = cur
         while remaining > 0:
@@ -153,5 +158,20 @@ def get_current_datetime() -> str:
     return f"{n.isoformat(timespec='minutes')} ({n.strftime('%A')})"
 
 
+def plan_before_deadline(request: dict) -> dict:
+    """Plan remaining reviewed assignment work into free calendar intervals.
+
+    Args:
+        request: DeadlineRequest JSON: action='plan', repository_url, document_sha256,
+            analysis, estimates (work IDs to minutes), start_at/due_at with timezone,
+            day_start/day_end, daily_minutes, day_limits, calendar_events and previous_plan.
+            Estimates must come from the student; never invent them or drop unverified work.
+    """
+    from agent.deadline import build_plan
+    from campuspulse.models import DeadlineRequest
+
+    return build_plan(DeadlineRequest.model_validate(request))
+
+
 TOOLS = [get_current_datetime, calculate_deadlines, plan_study_week,
-         read_local_file, web_search, github_repo_status]
+         read_local_file, web_search, github_repo_status, plan_before_deadline]

@@ -11,7 +11,7 @@ dependencies = [
   "fastapi>=0.115,<1", "uvicorn>=0.34,<1", "pydantic>=2.10,<3",
   "pydantic-settings>=2.7,<3", "python-multipart>=0.0.20,<1",
   "pypdf>=6.21,<7", "python-docx>=1.1,<2", "google-genai>=2.31,<3",
-  "mcp>=1.10,<2", "httpx>=0.28,<1", "jsonschema>=4.23,<5",
+  "mcp>=1.10,<2", "httpx>=0.28,<1", "jsonschema>=4.23,<5", "requests>=2.31,<3",
 ]
 
 [project.optional-dependencies]
@@ -19,10 +19,11 @@ dev = ["pytest>=8,<10", "pytest-asyncio>=0.25,<2", "ruff>=0.11,<1", "streamlit>=
 cloud = ["google-cloud-agentplatform[agent_engines]==2.5.0", "cloudpickle>=3,<4"]
 
 [tool.setuptools.packages.find]
-include = ["campuspulse*"]
+include = ["campuspulse*", "agent*", "campus_chat_ui*"]
 
 [tool.setuptools.package-data]
 campuspulse = ["static/*"]
+campus_chat_ui = ["styles.css", "mock_data.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

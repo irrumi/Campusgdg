@@ -135,3 +135,11 @@ local title search, and settings at the bottom. Native Streamlit radio inputs ke
 selection and keyboard semantics beneath the row treatment. The sidebar surface is
 `#161d27`, its selected pill is `#273e5a`, and selected text is `#c6dfff`. Only the
 sidebar uses these variants; the main workspace and connection behavior stay intact.
+
+The «До сдачи» view reuses the Streamlit surface, controls and token owner above.
+Its signature is the paired before/after study timeline: date rails in the existing
+accent, tabular time labels in muted text, and wrapping work titles. The pairing
+communicates an actual plan change; it contains no decorative progress percentages.
+Native columns stack on narrow screens in before/after reading order. Evidence and
+tool receipts remain accessible through native expanders. Runtime rules live in
+`campus_chat_ui/styles.css` under `.deadline-*`; no second theme or token set is added.

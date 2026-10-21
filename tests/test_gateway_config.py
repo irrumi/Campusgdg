@@ -10,7 +10,7 @@ import pytest
 
 
 @pytest.mark.parametrize("existing_environment", [False, True])
-def test_gateway_loads_configuration_before_agent_construction(tmp_path, monkeypatch, existing_environment):
+def test_gateway_uses_only_process_configuration_without_reading_local_files(tmp_path, monkeypatch, existing_environment):
     monkeypatch.setattr(os, "environ", os.environ.copy())
     # Copy only the gateway into an isolated root, never reading real credentials.
     source = Path(__file__).resolve().parents[1] / "agent" / "server.py"
@@ -36,13 +36,22 @@ def test_gateway_loads_configuration_before_agent_construction(tmp_path, monkeyp
         monkeypatch.setenv("AGENT_ENGINE_RESOURCE", "existing-resource")
         monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "existing-region")
         monkeypatch.setenv("GOOGLE_CLOUD_MODEL", "existing-model")
+        monkeypatch.setenv("CAMPUS_API_KEY", key)
+
+    read_text = Path.read_text
+
+    def guarded_read(path, *args, **kwargs):
+        if path.name in {".env", "vertex.config.json"}:
+            pytest.fail("Importing the gateway must not read credential/configuration files")
+        return read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", guarded_read)
 
     namespace = runpy.run_path(str(gateway))
     agent = namespace["CampusAgent"]()
 
-    prefix = "existing" if existing_environment else "file"
-    assert agent.project == f"{prefix}-project"
-    assert namespace["os"].environ["AGENT_ENGINE_RESOURCE"] == f"{prefix}-resource"
-    assert agent.location == ("existing-region" if existing_environment else "test-region")
-    assert agent.model == ("existing-model" if existing_environment else "test-model")
-    assert namespace["KEY_HASH"] == hashlib.sha256(key.encode()).hexdigest()
+    assert agent.project == ("existing-project" if existing_environment else None)
+    assert namespace["os"].environ.get("AGENT_ENGINE_RESOURCE") == ("existing-resource" if existing_environment else None)
+    assert agent.location == ("existing-region" if existing_environment else "us-central1")
+    assert agent.model == ("existing-model" if existing_environment else "gemini-3.1-flash-lite")
+    assert namespace["KEY_HASH"] == (hashlib.sha256(key.encode()).hexdigest() if existing_environment else "")

@@ -1,0 +1,49 @@
+{
+  "kind": "explicit_demo_inputs",
+  "description": "Условное расписание для репетиции; не личное расписание пользователя и не данные вузовского API.",
+  "timezone": "Asia/Qyzylorda",
+  "calendar_events": [
+    {
+      "id": "deadline-demo-seminar",
+      "title": "Демо: семинар",
+      "course": "Условия демонстрации",
+      "date": "2026-10-22",
+      "time": "17:00–19:00",
+      "location": "Демонстрационный сценарий",
+      "type": "lecture",
+      "_example": true
+    },
+    {
+      "id": "deadline-demo-lab",
+      "title": "Демо: лабораторная",
+      "course": "Условия демонстрации",
+      "date": "2026-10-23",
+      "time": "18:00–20:00",
+      "location": "Демонстрационный сценарий",
+      "type": "lecture",
+      "_example": true
+    },
+    {
+      "id": "deadline-demo-consultation",
+      "title": "Демо: консультация",
+      "course": "Условия демонстрации",
+      "date": "2026-10-24",
+      "time": "17:00–18:00",
+      "location": "Демонстрационный сценарий",
+      "type": "lecture",
+      "_example": true
+    }
+  ],
+  "planning": {
+    "start_at": "2026-10-22T16:45:00+05:00",
+    "due_at": "2026-10-24T21:00:00+05:00",
+    "day_start": "17:00",
+    "day_end": "21:00",
+    "daily_minutes": 180,
+    "day_limits": {}
+  },
+  "changes": [
+    {"date": "2026-10-23", "available_minutes": 60, "description": "Завтра только час"},
+    {"date": "2026-10-23", "available_minutes": 0, "description": "Завтра совсем нет времени"}
+  ]
+}

@@ -1,8 +1,12 @@
 google-genai
-google-cloud-aiplatform[agent_engines]
+google-cloud-agentplatform[agent_engines]==2.5.0
 mcp
 fastapi
 uvicorn
 requests
 pypdf
 streamlit
+pydantic-settings>=2.7,<3
+httpx>=0.28,<1
+jsonschema>=4.23,<5
+tzdata

@@ -13,11 +13,17 @@ import streamlit as st
 from campus_chat_ui.planner_actions import (
     decode_planner_response, planner_contract, requests_planner_change, validate_additions,
 )
+from campus_chat_ui.tool_activity import public_steps, render_activity
+from campus_chat_ui import deadline_mode
 
 
 def load_vertex_connection():
+    if os.environ.get("CAMPUS_LOCAL_ONLY") == "1":
+        return {}
     connection = {}
     for name in ("agent.connection.json", "vertex.config.json"):
+        if name == "vertex.config.json" and os.environ.get("CAMPUS_SKIP_LOCAL_CONFIG") == "1":
+            continue
         config_path = Path(__file__).with_name(name)
         if config_path.exists():
             configured = json.loads(config_path.read_text(encoding="utf-8"))
@@ -61,12 +67,14 @@ HOME = "📊 Dashboard студента"
 CHAT = "💬 Чат с Агентом"
 SPLIT = "⚡ Split: Чат + Календарь"
 PLANNER = "calendar_tasks"
-VIEW_NAMES = {HOME: "Главная", CHAT: "Чат", PLANNER: "Календарь и задачи", SPLIT: "Чат и календарь"}
+DEADLINE = "deadline_rescue"
+VIEW_NAMES = {HOME: "Главная", CHAT: "Чат", DEADLINE: "До сдачи", PLANNER: "Календарь и задачи", SPLIT: "Чат и календарь"}
 VIEW_ICONS = {
     HOME: ":material/home:",
     CHAT: ":material/chat_bubble_outline:",
     PLANNER: ":material/calendar_month:",
     SPLIT: ":material/splitscreen:",
+    DEADLINE: ":material/assignment_turned_in:",
 }
 MONTHS = (
     "января",
@@ -326,6 +334,9 @@ def process_uploaded_files(uploaded_files, chat):
         if len(chat["uploaded_files"]) >= 10:
             errors.append("Можно прикрепить до 10 файлов к диалогу.")
             break
+        if sum(len(f.get("base64", "")) * 3 // 4 for f in chat["uploaded_files"]) + len(raw) > 20 * 1024 * 1024:
+            errors.append("Общий размер вложений не должен превышать 20 МБ.")
+            continue
         preview = (
             raw.decode("utf-8", errors="replace")[:4000]
             if file.name.lower().endswith((".txt", ".csv", ".md", ".json"))
@@ -721,6 +732,7 @@ def call_agent_api(user_message: str, chat: dict) -> str:
     api_url = settings.get("api_url", "").strip()
     api_key = settings.get("api_key", "").strip()
     protocol = settings.get("protocol", "Custom Agent REST (JSON)")
+    chat.pop("_last_steps", None)
 
     student_context = {
         "today": today_local().strftime("%Y-%m-%d"),
@@ -853,6 +865,7 @@ def call_agent_api(user_message: str, chat: dict) -> str:
         "state": "verified",
         "checked_at": local_now().strftime("%H:%M"),
     }
+    chat["_last_steps"] = public_steps(data.get("steps", []), secrets=(api_key,))
     return (("\n".join(logs) + "\n\n") if logs else "") + reply
 
 
@@ -1016,7 +1029,8 @@ def render_pending(chat, history):
                     )
                     status.update(label="Ответ не получен", state="error")
                 else:
-                    chat["messages"].append({"role": "assistant", "content": reply})
+                    chat["messages"].append({"role": "assistant", "content": reply,
+                                             "steps": chat.pop("_last_steps", [])})
                     chat.pop("pending_request", None)
                     status.update(label="Ответ получен", state="complete")
         st.rerun()
@@ -1084,12 +1098,14 @@ def render_chat_interface(chat):
                         unsafe_allow_html=True,
                     )
                 st.markdown(str(message["content"]))
+                if message["role"] == "assistant":
+                    render_activity(message.get("steps", []))
     for warning in chat.get("upload_warnings", []):
         st.warning(warning)
     render_pending(chat, history)
     with st.popover("Файлы и инструменты", icon=":material/attach_file:", use_container_width=False):
         st.caption(
-            "Файлы прикрепляются скрепкой в поле сообщения. До 10 файлов, каждый до 10 МБ. Они остаются в контексте этого диалога."
+            "До 10 файлов: каждый до 10 МБ, суммарно до 20 МБ. PDF и DOCX должны содержать текст. Вложения остаются в этом диалоге."
         )
         if not chat["uploaded_files"]:
             st.caption("Прикреплённых файлов пока нет.")
@@ -1130,7 +1146,7 @@ def render_chat_interface(chat):
         "Напишите сообщение или прикрепите файл",
         key=f"chat_input_box_{chat['id']}",
         accept_file="multiple",
-        file_type=["pdf", "txt", "csv", "docx", "md", "json", "png", "jpg", "jpeg", "webp", "gif"],
+        file_type=["pdf", "txt", "csv", "docx", "md", "json", "png", "jpg", "jpeg", "webp"],
         max_upload_size=10,
         max_chars=32000,
         disabled=bool(chat.get("pending_request")),
@@ -1295,6 +1311,8 @@ def render_shell():
         st.success(notice)
     if st.session_state.active_view == HOME:
         render_student_dashboard()
+    elif st.session_state.active_view == DEADLINE:
+        deadline_mode.render_deadline_mode(chat, date_field=date_field, now=local_now())
     elif st.session_state.active_view == PLANNER:
         render_planner()
     elif st.session_state.active_view == SPLIT:

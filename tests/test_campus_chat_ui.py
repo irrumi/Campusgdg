@@ -495,3 +495,203 @@ def test_new_session_uses_updated_project_defaults():
     assert state.agent_settings["api_url"] == "https://new-project.example.test/api/v1/chat"
     assert state.agent_settings["agent_id"] == "projects/test/locations/test/reasoningEngines/new"
     assert state.agent_settings["api_key"] == "test-only-environment-key"
+
+
+def test_chat_keeps_public_tool_receipts_and_transmits_original_file():
+    instance = app()
+    configure(instance)
+    original = base64.b64encode(b"Actual assignment contents, not a preview.").decode()
+    chat(instance)["uploaded_files"].append({"name": "assignment.txt", "type": "text/plain", "size_kb": 1,
+        "content_preview": "Short preview", "base64": original})
+    queue(instance, "Прочитай задание")
+    response = Mock(status_code=200)
+    response.json.return_value = {"output": "Explicit test answer", "steps": [
+        {"type": "thought", "content": "private reasoning"},
+        {"type": "tool_call", "tool": "read_uploaded_file", "args": {"filename": "assignment.txt"},
+         "result": {"summary": "Read actual contents"}, "status": "success"}]}
+    with patch("requests.post", return_value=response) as post:
+        instance.run()
+    assert not instance.exception
+    assert post.call_args.kwargs["json"]["files"][0]["base64"] == original
+    stored = chat(instance)["messages"][-1]["steps"]
+    assert len(stored) == 1 and stored[0]["tool"] == "read_uploaded_file"
+    assert "private reasoning" not in json.dumps(stored)
+    assert any("Действия агента" in e.label for e in instance.expander)
+
+
+def test_deadline_full_review_plan_replan_apply_undo_without_duplicate_events():
+    from agent.deadline import build_plan, run_deadline
+    from campuspulse.config import Settings
+    from campuspulse.models import DeadlineRequest
+    from test_deadline import analysis, upload
+
+    instance = app()
+    configure(instance)
+    explicit_file = upload()
+    chat(instance)["uploaded_files"] = [{**explicit_file, "type": "text/plain", "size_kb": 1,
+                                         "content_preview": "Explicit offline test fixture"}]
+    instance.sidebar.radio[0].set_value("deadline_rescue").run()
+    assert not instance.exception
+    assert any("Начните с файла" in i.value for i in instance.info)
+    instance.selectbox[0].set_value("assignment.txt")
+    instance.text_input[0].set_value("https://github.com/example/student")
+
+    class ExplicitFakeGuardian:
+        def __init__(self, settings):
+            pass
+
+        async def analyze(self, document, repository):
+            return analysis()
+
+    calls = []
+
+    def explicit_service(url, **kwargs):
+        payload = kwargs["json"]
+        calls.append(payload)
+        if payload["deadline_request"]["action"] == "analyze":
+            data = run_deadline(payload["deadline_request"], payload["files"], Settings(_env_file=None),
+                                agent_factory=ExplicitFakeGuardian)
+        else:
+            plan = build_plan(DeadlineRequest.model_validate(payload["deadline_request"]))
+            data = {"output": "Explicit test plan", "steps": [{"type": "tool_call", "tool": "plan_before_deadline"}],
+                    "deadline": {"action": "plan", "plan": plan}}
+        response = Mock(status_code=200)
+        response.json.return_value = data
+        return response
+
+    with patch("requests.post", side_effect=explicit_service):
+        button(instance, "Проверить готовность").click().run()
+        assert not instance.exception
+        workspace = instance.session_state.deadline_workspace
+        assert workspace["review"]["analysis"]["live"] is False
+        assert calls[0]["files"][0]["base64"] == explicit_file["base64"]
+        verified_connection = deepcopy(instance.session_state.agent_connection)
+        instance.session_state.agent_settings = {**instance.session_state.agent_settings, "api_url": "", "api_key": ""}
+        pending_work = [w for w in workspace["review"]["work"] if w["status"] != "satisfied"]
+        for item in pending_work:
+            instance.number_input(key="deadline_estimate_" + item["id"]).set_value(3.0)
+        # An unrelated personal event outside the study window must survive every operation.
+        today = instance.session_state.selected_cal_date.isoformat()
+        unrelated = {"id": "personal", "title": "Morning class", "type": "lecture", "date": today,
+                     "time": "07:00–08:00", "course": "Course", "location": "Campus"}
+        instance.session_state.calendar_events = [unrelated]
+        button(instance, "Рассчитать план").click().run()
+        assert not instance.exception
+        first = deepcopy(workspace["plan"])
+        assert first and not first["deficit_minutes"]
+        assert instance.session_state.agent_connection == verified_connection  # Local planning proves no cloud access.
+        button(instance, "Применить к календарю").click().run()
+        assert not instance.exception
+        assert button(instance, "Применить к календарю").disabled
+        assert unrelated in instance.session_state.calendar_events
+        due_input = instance.text_input(key="deadline_due_date").value
+        instance.sidebar.radio[0].set_value("calendar_tasks").run()
+        assert not instance.exception
+        instance.sidebar.radio[0].set_value("deadline_rescue").run()
+        assert not instance.exception
+        assert instance.text_input(key="deadline_due_date").value == due_input
+        assert all(instance.number_input(key="deadline_estimate_" + w["id"]).value == 3.0 for w in pending_work)
+        button(instance, "Завтра только час — пересчитать").click().run()
+        assert not instance.exception
+        second = workspace["plan"]
+        assert second["id"] != first["id"]
+        assert workspace["last_request"]["day_limits"]
+        assert len(calls) == 1  # Only analysis needs the cloud; both plans ran locally.
+        assert workspace["activity"][-1]["result"]["execution"] == "local"
+        assert any(change["kind"] == "moved" for change in second["changes"])
+        button(instance, "Применить к календарю").click().run()
+        assert not instance.exception
+        events = instance.session_state.calendar_events
+        assert unrelated in events
+        assert len({e["id"] for e in events}) == len(events)
+        assert len(events) == 1 + len(second["blocks"])
+        button(instance, "Отменить последнее применение").click().run()
+        assert not instance.exception
+        assert len(instance.session_state.calendar_events) == 1 + len(first["blocks"])
+        assert workspace["applied"][first["deadline_id"]]["id"] == first["id"]
+
+
+def test_legacy_response_retries_through_real_compatibility_boundary_without_losing_settings():
+    from agent.deadline import run_deadline
+    from campuspulse.config import Settings
+    from test_deadline import analysis, upload
+
+    instance = app()
+    configure(instance)
+    saved_settings = deepcopy(instance.session_state.agent_settings)
+    file = upload()
+    payload = {"action": "analyze", "repository_url": "https://github.com/example/student"}
+    instance.session_state.deadline_workspace = {"activity": [], "day_limits": {}, "applied": {},
+        "pending": {"status": "failed", "payload": payload, "files": [file],
+                    "error": "Подключённый агент не вернул структурированную проверку «До сдачи». Обычный ответ чата не заменяет проверку требований."}}
+
+    class ExplicitFakeGuardian:
+        def __init__(self, settings):
+            pass
+
+        async def analyze(self, document, repository):
+            return analysis()
+
+    data = run_deadline(payload, [file], Settings(_env_file=None), agent_factory=ExplicitFakeGuardian)
+    instance.sidebar.radio[0].set_value("deadline_rescue").run()
+    assert button(instance, "Проверить через совместимый режим")
+    with patch("campus_chat_ui.deadline_mode.run_gateway_review", return_value=data) as compatibility:
+        with patch("requests.post") as post:
+            button(instance, "Проверить через совместимый режим").click().run()
+    assert not instance.exception
+    post.assert_not_called()
+    assert compatibility.call_count == 1
+    assert compatibility.call_args.args[:2] == (payload, [file])
+    assert instance.session_state.agent_settings == saved_settings
+    assert instance.session_state.deadline_workspace["source_file"] == file
+    assert instance.session_state.deadline_workspace["review"]["analysis"]["live"] is False
+
+
+def test_compatibility_progress_stays_on_ui_thread_and_shows_timetable_error():
+    from test_deadline import upload
+
+    instance = app()
+    configure(instance)
+    instance.session_state.deadline_workspace = {"activity": [], "day_limits": {}, "applied": {},
+        "pending": {"status": "queued", "transport": "gateway-text",
+                    "payload": {"action": "analyze", "repository_url": "https://github.com/example/student"},
+                    "files": [upload(b"Timetable: lecture tomorrow.")]}}
+    response = requests.Response()
+    response.status_code = 200
+    response._content = json.dumps({"output": '{"requirements":[]}', "steps": []}).encode()
+    with patch("requests.post", return_value=response) as post:
+        instance.sidebar.radio[0].set_value("deadline_rescue").run()
+    assert not instance.exception
+    assert post.call_count == 1
+    error = instance.session_state.deadline_workspace["pending"]["error"]
+    assert "В файле нет проверяемых требований" in error
+    assert "Не удалось обработать" not in error
+
+
+def test_deadline_explains_rejected_sources_and_actual_ambiguity_and_keeps_all_read_sources():
+    from agent.deadline import review_work
+    from test_deadline import analysis
+
+    instance = app()
+    result = analysis(("unverified", "unverified", "unverified"))
+    result.requirements[1].ambiguity = "Укажите workflow и ветку для проверки CI."
+    result.findings[0].explanation = "The proposed conclusion could not be grounded in sufficient collected evidence."
+    result.findings[0].evidence_ids = []
+    result.findings[1].explanation = "The assignment requirement needs clarification."
+    result.usage["verification"] = [{"attempt": 2, "checks": [
+        {"requirement_id": "r0", "reasons": ["unknown_evidence_id", "citation_mismatch"]}]}]
+    instance.session_state.deadline_workspace = {"activity": [], "day_limits": {}, "applied": {}, "review": {
+        "filename": "explicit-test.txt", "repository_url": "https://github.com/example/student",
+        "document_sha256": "a" * 64, "analysis": result.model_dump(mode="json"),
+        "work": review_work(result, "a" * 64)}}
+    with patch("requests.post") as post:
+        instance.sidebar.radio[0].set_value("deadline_rescue").run()
+    post.assert_not_called()
+    assert not instance.exception
+    rendered = " ".join(item.value for kind in (instance.markdown, instance.info, instance.caption) for item in kind)
+    assert "Укажите workflow и ветку для проверки CI." in rendered
+    assert "Цитата агента не совпала" in rendered
+    assert "которого нет среди полученных данных" in rendered
+    assert "The proposed conclusion" not in rendered
+    assert any(item.label == "Полученные источники · 1" for item in instance.expander)
+    assert any("Explicit test CI result." in item.value for item in instance.code)
