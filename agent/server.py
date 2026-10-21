@@ -3,40 +3,29 @@ Run: uvicorn agent.server:app --port 8000   -> UI endpoint http://localhost:8000
 Set AGENT_ENGINE_RESOURCE to forward to the deployed Reasoning Engine instead of running locally.
 
 Security: every POST requires the secret CAMPUS_API_KEY (Authorization: Bearer ... or X-API-Key).
-The server refuses to start without it. Requests are also rate-limited per client.
+POST requests fail closed without it. Import does not read local configuration files.
+Requests are also rate-limited per client.
 """
 import hashlib
 import hmac
-import json
 import os
 import time
 from collections import defaultdict, deque
-from pathlib import Path
+from typing import Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from agent.agent import CampusAgent
-
-_root = Path(__file__).resolve().parent.parent
-if (_root / ".env").exists():
-    for _line in (_root / ".env").read_text(encoding="utf-8").splitlines():
-        _k, _, _v = _line.partition("=")
-        if _k.strip() and not _k.startswith("#") and _v.strip():
-            os.environ.setdefault(_k.strip(), _v.strip())
-if (_root / "vertex.config.json").exists():
-    _cfg = json.loads((_root / "vertex.config.json").read_text(encoding="utf-8"))
-    os.environ.setdefault("GOOGLE_CLOUD_PROJECT", _cfg.get("project", ""))
-    os.environ.setdefault("AGENT_ENGINE_RESOURCE", _cfg.get("agent_engine_resource", ""))
+from agent.attachments import decode_attachments
+from campuspulse.security import safe_error
 
 KEY_HASH = os.environ.get("CAMPUS_API_KEY_SHA256", "").lower()
 if not KEY_HASH and len(os.environ.get("CAMPUS_API_KEY", "")) >= 16:
     KEY_HASH = hashlib.sha256(os.environ["CAMPUS_API_KEY"].encode()).hexdigest()
-if len(KEY_HASH) != 64:
-    raise RuntimeError("Set CAMPUS_API_KEY_SHA256 (sha256 hex of your secret key) before starting the server.")
 
 RATE_LIMIT = int(os.environ.get("RATE_LIMIT_PER_MIN", "10"))
-MAX_MESSAGE_CHARS = 4000
+MAX_MESSAGE_CHARS = 32_000
 _hits: dict[str, deque] = defaultdict(deque)
 
 app = FastAPI(title="CampusPulse AI")
@@ -44,6 +33,8 @@ _local = None
 
 
 def require_key(request: Request):
+    if len(KEY_HASH) != 64:
+        raise HTTPException(503, "Configure CAMPUS_API_KEY_SHA256 before accepting requests.")
     auth = request.headers.get("authorization", "")
     given = auth[7:] if auth.lower().startswith("bearer ") else request.headers.get("x-api-key", "")
     if not hmac.compare_digest(hashlib.sha256(given.encode()).hexdigest(), KEY_HASH):
@@ -61,18 +52,20 @@ class ChatIn(BaseModel):
     message: str
     history: list[dict] = Field(default_factory=list)
     student_context: dict = Field(default_factory=dict)
+    files: list[dict] = Field(default_factory=list, max_length=10)
+    mode: Literal["chat", "deadline"] = "chat"
+    deadline_request: dict | None = None
 
     model_config = {"extra": "allow"}
 
 
 def get_remote_agent(resource: str):
-    import vertexai
-    from vertexai import agent_engines
+    import agentplatform
     parts = resource.split("/")
     if len(parts) != 6 or parts[0] != "projects" or parts[2] != "locations" or parts[4] != "reasoningEngines":
         raise RuntimeError("Invalid AGENT_ENGINE_RESOURCE")
-    vertexai.init(project=parts[1], location=parts[3])
-    return agent_engines.get(resource)
+    client = agentplatform.Client(project=parts[1], location=parts[3])
+    return client.runtimes.get(name=resource)
 
 
 @app.get("/api/v1/chat")
@@ -83,7 +76,9 @@ def ping():
             get_remote_agent(resource)
         except Exception:
             raise HTTPException(503, "Vertex AI agent unavailable") from None
-    return {"status": "ok", "backend": "vertex-agent-engine" if resource else "vertex-gemini"}
+    backend = "vertex-agent-engine" if resource else ("gemini-api" if os.environ.get("CAMPUS_LLM_BACKEND") == "gemini" else "vertex-gemini")
+    return {"status": "ok", "backend": backend,
+            "gateway_capabilities": ["attachments-v1", "deadline-v1"]}
 
 
 @app.post("/api/v1/chat", dependencies=[Depends(require_key)])
@@ -91,11 +86,29 @@ def chat(body: ChatIn):
     global _local
     if len(body.message) > MAX_MESSAGE_CHARS:
         raise HTTPException(413, "Message too long")
+    payload = {"message": body.message, "history": body.history[-20:], "student_context": body.student_context}
+    if body.files:
+        try:
+            decode_attachments(body.files)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+        payload["files"] = body.files
+    if body.mode == "deadline":
+        payload.update(mode=body.mode, deadline_request=body.deadline_request)
     resource = os.environ.get("AGENT_ENGINE_RESOURCE")
-    if resource:
-        data = get_remote_agent(resource).query(
-            message=body.message, history=body.history[-20:], student_context=body.student_context)
-    else:
-        _local = _local or CampusAgent()
-        data = _local.query(body.message, body.history[-20:], body.student_context)
+    try:
+        if resource:
+            data = get_remote_agent(resource).query(**payload)
+        else:
+            _local = _local or CampusAgent()
+            data = _local.query(**payload)
+    except Exception as exc:
+        # Remote exceptions may contain provider headers or document excerpts.
+        raise HTTPException(502, safe_error(exc)) from None
+    if not isinstance(data, dict) or not isinstance(data.get("output"), str) or not isinstance(data.get("steps"), list):
+        raise HTTPException(502, "Agent returned an unsupported response.")
+    if body.mode == "deadline":
+        if not isinstance(data.get("deadline"), dict):
+            raise HTTPException(502, "Update the Agent Engine runtime to enable deadline-v1.")
+        return {"output": data["output"], "steps": data["steps"], "deadline": data["deadline"]}
     return {"output": data["output"], "steps": data["steps"]}

@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import pytest
 from google.genai import types
 
-from campuspulse.agent import AgentConfigurationError, AgentError, AgentRateLimitError, GuardianAgent, _Assessment
+from campuspulse.agent import AgentConfigurationError, AgentError, AgentRateLimitError, GuardianAgent, _Assessment, _ground_findings
 from campuspulse.config import Settings
 from campuspulse.extraction import ExtractionConfigurationError, ExtractionError
 from campuspulse.github_mcp import GitHubConfigurationError, GitHubMCPError
@@ -326,6 +326,25 @@ async def test_missing_findings_and_ambiguous_requirements_are_unverified():
     result = await agent.analyze(DOCUMENT, REPOSITORY)
     assert [item.requirement_id for item in result.findings] == ["r1", "r2"]
     assert all(item.status == "unverified" for item in result.findings)
+
+
+@pytest.mark.parametrize("updates,reason", [
+    ({"evidence_ids": ["invented"]}, "unknown_evidence_id"),
+    ({"evidence_ids": []}, "missing_evidence_id"),
+    ({"citations": []}, "missing_citation"),
+    ({"citations": [{"evidence_id": "e1", "quote": "invented"}]}, "citation_mismatch"),
+    ({"evidence_ids": ["e1", "e2"]}, "citation_coverage_mismatch"),
+    ({"basis": "insufficient_evidence"}, "incorrect_basis"),
+    ({"explanation": "See https://other.example"}, "url_in_explanation"),
+])
+def test_grounding_reports_exact_rejection_without_relaxing_verification(updates, reason):
+    diagnostics, warnings = [], []
+    result = _ground_findings([requirement()], [evidence(), evidence(identifier="e2")],
+        _Assessment.model_validate({"findings": [decision(**updates)]}), warnings, diagnostics)
+    assert result[0].status == "unverified"
+    assert reason in diagnostics[0]["reasons"]
+    assert diagnostics[0]["proposed_status"] == "satisfied"
+    assert diagnostics[0]["effective_status"] == "unverified"
 
 
 @pytest.mark.parametrize("findings", [[decision("unknown")], [decision(), decision()]])

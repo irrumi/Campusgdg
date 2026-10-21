@@ -195,7 +195,8 @@ def _direct_negative_observation(item: Evidence) -> bool:
 
 
 def _ground_findings(requirements: list[Requirement], evidence: list[Evidence],
-                     assessment: _Assessment, warnings: list[str]) -> list[Finding]:
+                     assessment: _Assessment, warnings: list[str],
+                     diagnostics: list[dict[str, Any]] | None = None) -> list[Finding]:
     by_id = {item.id: item for item in evidence}
     requirement_ids = {item.id for item in requirements}
     decisions: dict[str, _Decision] = {}
@@ -209,6 +210,9 @@ def _ground_findings(requirements: list[Requirement], evidence: list[Evidence],
         if decision is None:
             findings.extend(_unverified([requirement], "Gemini did not assess this requirement."))
             warnings.append("A missing finding was marked unverified.")
+            if diagnostics is not None:
+                diagnostics.append({"requirement_id": requirement.id, "proposed_status": None,
+                                    "effective_status": "unverified", "reasons": ["missing_finding"]})
             continue
         cited = set(decision.evidence_ids)
         valid_ids = [key for key in dict.fromkeys(decision.evidence_ids) if key in by_id]
@@ -221,18 +225,31 @@ def _ground_findings(requirements: list[Requirement], evidence: list[Evidence],
         )
         quotes_cover_ids = {citation.evidence_id for citation in decision.citations} == cited
         expected_basis = {"satisfied": "supports_requirement", "not_satisfied": "contradicts_requirement"}
-        unsupported = (
-            bool(requirement.ambiguity)
-            or len(valid_ids) != len(cited)
-            or bool(re.search(r"https?://|www\.", decision.explanation + (decision.recommendation or ""), re.I))
-            or (decision.status == "not_satisfied"
-                and not any(_direct_negative_observation(by_id[key]) for key in valid_ids))
-            or (decision.status != "unverified" and (
-                not cited or not quotes_valid or not quotes_cover_ids
-                or decision.basis != expected_basis[decision.status]
-            ))
-        )
-        if unsupported:
+        reasons = []
+        if requirement.ambiguity:
+            reasons.append("ambiguous_requirement")
+        if len(valid_ids) != len(cited):
+            reasons.append("unknown_evidence_id")
+        if re.search(r"https?://|www\.", decision.explanation + (decision.recommendation or ""), re.I):
+            reasons.append("url_in_explanation")
+        if decision.status == "not_satisfied" and not any(_direct_negative_observation(by_id[key]) for key in valid_ids):
+            reasons.append("no_direct_negative_observation")
+        if decision.status != "unverified":
+            if not cited:
+                reasons.append("missing_evidence_id")
+            if not decision.citations:
+                reasons.append("missing_citation")
+            elif not quotes_valid:
+                reasons.append("citation_mismatch")
+            if not quotes_cover_ids:
+                reasons.append("citation_coverage_mismatch")
+            if decision.basis != expected_basis[decision.status]:
+                reasons.append("incorrect_basis")
+        if diagnostics is not None:
+            diagnostics.append({"requirement_id": requirement.id, "proposed_status": decision.status,
+                                "effective_status": "unverified" if reasons else decision.status,
+                                "reasons": reasons, "valid_evidence_ids": valid_ids})
+        if reasons:
             findings.append(Finding(
                 requirement_id=requirement.id, status=RequirementStatus.UNVERIFIED,
                 explanation="The proposed conclusion could not be grounded in sufficient collected evidence."
@@ -462,7 +479,11 @@ class GuardianAgent:
             return {"error": "Read failed or arguments were invalid. No evidence was added; use unverified."}
         evidence.extend(collected)
         steps.append(AgentStep(kind="tool", tool=kind,
-                               message=f"Read {kind}: collected {len(collected)} evidence item(s)."))
+                               message=f"Read {kind}: collected {len(collected)} evidence item(s).",
+                               arguments=arguments,
+                               result={"evidence": [{"id": item.id, "source_url": item.source_url,
+                                                     "retrieved_at": item.retrieved_at.isoformat()}
+                                                    for item in collected]}))
         return {"untrusted_evidence": [item.model_dump(mode="json") for item in collected]}
 
     @staticmethod

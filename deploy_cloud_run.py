@@ -71,6 +71,7 @@ def main():
         shutil.copyfile(ROOT / "Dockerfile.agent-api", source / "Dockerfile")
         shutil.copyfile(ROOT / "requirements-cloudrun.txt", source / "requirements-cloudrun.txt")
         shutil.copytree(ROOT / "agent", source / "agent", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        shutil.copytree(ROOT / "campuspulse", source / "campuspulse", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         run("run", "deploy", SERVICE, f"--source={source}", f"--region={REGION}",
             f"--service-account={runtime}", f"--build-service-account=projects/{PROJECT}/serviceAccounts/{builder}",
             f"--env-vars-file={environment_file}", "--allow-unauthenticated", "--port=8080",

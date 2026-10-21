@@ -121,6 +121,20 @@ button[kind="primary"]:hover, button[kind="primaryFormSubmit"]:hover {background
 .empty-chat h2 {font-size: 1.7rem !important; letter-spacing: -.02em;}
 .empty-chat p {color: var(--campus-muted);}
 .st-key-header_actions [data-testid="stHorizontalBlock"] {gap: .5rem;}
+.deadline-timeline {border-left: 2px solid var(--campus-accent); padding-left: 1rem;}
+.deadline-day {padding: .7rem 0; border-bottom: 1px solid var(--campus-border);}
+.deadline-day > strong {color: var(--campus-accent); font-variant-numeric: tabular-nums;}
+.deadline-day ul {list-style: none; padding: 0; margin: .5rem 0 0;}
+.deadline-day li {display: flex; align-items: baseline; gap: .75rem; padding: .35rem 0;}
+.deadline-day li > span:last-child {min-width: 0; overflow-wrap: anywhere;}
+.deadline-time {flex: 0 0 7rem; color: var(--campus-muted); font-size: .875rem; font-variant-numeric: tabular-nums;}
+.deadline-day li.deadline-change {background: var(--campus-raised); border-radius: 6px; padding: .5rem;}
+.deadline-change-label {display: block; color: var(--campus-accent); font-size: .8rem;}
+.st-key-deadline_comparison {container-type: inline-size;}
+@container (max-width: 620px) {
+  .st-key-deadline_comparison [data-testid="stHorizontalBlock"] {flex-wrap: wrap;}
+  .st-key-deadline_comparison [data-testid="stColumn"] {width: 100% !important; flex: 1 1 100% !important;}
+}
 @media (max-width: 900px) {
   [data-testid="stMainBlockContainer"] {padding: 3.5rem 1.25rem 1.5rem;}
 }

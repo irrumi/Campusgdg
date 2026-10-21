@@ -26,6 +26,14 @@ PDF pages, or paragraph indices for DOCX/TXT/MD, as specified by source_kind.
 Split independently checkable requirements. Keep uncertain or underspecified
 requirements, with a concrete ambiguity explaining missing scope, threshold,
 deadline or conflicting wording. Do not resolve ambiguity by making assumptions.
+Distinguish unclear acceptance criteria from evidence that has not yet been read.
+Do not invent stricter criteria than the source asks for. For example, a latest CI
+run that must finish successfully asks for the CI provider's recorded terminal
+outcome (completed/success), not an independent judgment of its test quality.
+Unspecified test names or coverage are not an ambiguity in that outcome requirement.
+If the source separately requires a particular suite, coverage or quality threshold,
+preserve those criteria and flag genuinely missing definitions. Similarly, checking
+that README documents setup commands does not require a complete setup specification.
 Set ambiguity to null only when the source is clear. Return an empty requirements
 array if there are no assignment requirements. Do not include private reasoning.
 """

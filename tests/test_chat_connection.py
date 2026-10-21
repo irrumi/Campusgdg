@@ -8,6 +8,8 @@ import pytest
 
 
 def load_configuration(tmp_path, monkeypatch, portable=None, local=None, endpoint=None):
+    monkeypatch.delenv("CAMPUS_SKIP_LOCAL_CONFIG", raising=False)
+    monkeypatch.delenv("CAMPUS_LOCAL_ONLY", raising=False)
     for name, data in (("agent.connection.json", portable), ("vertex.config.json", local)):
         if data is not None:
             (tmp_path / name).write_text(json.dumps(data), encoding="utf-8")
@@ -61,3 +63,18 @@ def test_different_local_agent_does_not_inherit_portable_gateway(tmp_path, monke
         local={"agent_engine_resource": "my-agent", "project": "my-project"})
     assert config["VERTEX_RESOURCE"] == "my-agent"
     assert config["DEFAULT_AGENT_URL"] == "http://127.0.0.1:8000/api/v1/chat"
+
+
+def test_local_only_never_reads_cloud_connection_files(tmp_path, monkeypatch):
+    source = Path(__file__).resolve().parents[1] / "campus_chat_app.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "load_vertex_connection")
+    monkeypatch.setenv("CAMPUS_LOCAL_ONLY", "1")
+    namespace = {"Path": Path, "json": json, "os": os, "__file__": str(tmp_path / "campus_chat_app.py")}
+    exec(compile(ast.Module(body=[node], type_ignores=[]), str(source), "exec"), namespace)
+
+    def reject_file_read(*args, **kwargs):
+        pytest.fail("Local-only startup read a cloud connection file")
+
+    monkeypatch.setattr(Path, "read_text", reject_file_read)
+    assert namespace["load_vertex_connection"]() == {}
