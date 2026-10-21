@@ -10,6 +10,9 @@ from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 import requests
 import streamlit as st
+from campus_chat_ui.planner_actions import (
+    decode_planner_response, planner_contract, requests_planner_change, validate_additions,
+)
 
 
 def load_vertex_connection():
@@ -599,6 +602,10 @@ def render_student_dashboard():
 
 
 def render_calendar():
+    focus = st.session_state.pop("agent_calendar_focus", None)
+    if focus:
+        st.session_state.selected_cal_date = date.fromisoformat(focus)
+        st.session_state.calendar_date_text = st.session_state.selected_cal_date.strftime("%d.%m.%Y")
     if st.session_state.pop("calendar_go_today", False):
         st.session_state.selected_cal_date = today_local()
         st.session_state.calendar_date_text = today_local().strftime("%d.%m.%Y")
@@ -774,38 +781,24 @@ def render_planner():
 
 def apply_agent_side_effects(user_message: str, agent_data: dict | None = None) -> list[str]:
     applied_logs = []
-
-    if isinstance(agent_data, dict):
-        for ev in agent_data.get("add_calendar_events", []):
-            if isinstance(ev, dict) and ev.get("title"):
-                st.session_state.calendar_events.append(
-                    {
-                        "id": str(uuid.uuid4()),
-                        "title": ev.get("title"),
-                        "course": ev.get("course", "Общее"),
-                        "date": ev.get("date", today_local().strftime("%Y-%m-%d")),
-                        "time": ev.get("time", "16:00 - 17:00"),
-                        "location": ev.get("location", "Онлайн"),
-                        "type": ev.get("type", "study"),
-                    }
-                )
-                applied_logs.append(f"Добавлено в календарь: **{ev.get('title')}**")
-
-        for tsk in agent_data.get("add_tasks", []):
-            if isinstance(tsk, dict) and tsk.get("title"):
-                st.session_state.student_tasks.insert(
-                    0,
-                    {
-                        "id": str(uuid.uuid4()),
-                        "title": tsk.get("title"),
-                        "course": tsk.get("course", "Общее"),
-                        "due_date": tsk.get("due_date", today_local().strftime("%Y-%m-%d")),
-                        "priority": tsk.get("priority", "Средний"),
-                        "done": False,
-                    },
-                )
-                applied_logs.append(f"Добавлена задача: **{tsk.get('title')}**")
-
+    events, tasks = validate_additions(agent_data or {})
+    # Validate the whole response first; a bad second item must not leave a
+    # half-applied request that would duplicate events on retry.
+    for event in events:
+        if any(all(existing.get(key, "") == value for key, value in event.items())
+               for existing in st.session_state.calendar_events):
+            applied_logs.append(f"Уже есть в календаре: **{event['title']}** ({event['date']}).")
+            continue
+        st.session_state.calendar_events.append({"id": str(uuid.uuid4()), **event})
+        st.session_state.agent_calendar_focus = event["date"]
+        applied_logs.append(f"Добавлено в календарь: **{event['title']}** — {event['date']} {event['time']}")
+    for task in tasks:
+        if any(all(existing.get(key, "") == value for key, value in task.items())
+               for existing in st.session_state.student_tasks):
+            applied_logs.append(f"Задача уже есть: **{task['title']}** ({task['due_date']}).")
+            continue
+        st.session_state.student_tasks.insert(0, {"id": str(uuid.uuid4()), **task, "done": False})
+        applied_logs.append(f"Добавлена задача: **{task['title']}** — {task['due_date']}")
     return applied_logs
 
 
@@ -832,7 +825,7 @@ def call_agent_api(user_message: str, chat: dict) -> str:
 
     if protocol == "OpenAI-Compatible (/v1/chat/completions)":
         messages_payload = []
-        sys_text = settings.get("system_prompt", "")
+        sys_text = settings.get("system_prompt", "") + planner_contract(student_context["today"])
         if settings.get("sync_student_context", True):
             sys_text += "\n\nАктуальный календарь и дедлайны студента (JSON):\n" + json.dumps(
                 student_context, ensure_ascii=False
@@ -863,7 +856,9 @@ def call_agent_api(user_message: str, chat: dict) -> str:
         payload = {
             "chat_id": chat["id"],
             "agent_id": settings.get("agent_id", "campusgdg-student-agent-v1"),
-            "message": user_message,
+            # Legacy Vertex gateways forward only message/history/context and
+            # wrap the agent reply in output. Put the contract in message too.
+            "message": user_message + planner_contract(student_context["today"]),
             "system_prompt": settings.get("system_prompt", ""),
             "temperature": settings.get("temperature", 0.3),
             "student_context": (student_context if settings.get("sync_student_context", True) else {}),
@@ -932,7 +927,13 @@ def call_agent_api(user_message: str, chat: dict) -> str:
         raise AgentRequestError(
             "В ответе сервера нет текста. Проверьте выбранный протокол API.", uncertain=True
         )
-    logs = apply_agent_side_effects(user_message, data)
+    try:
+        reply, action_data = decode_planner_response(data, reply)
+        logs = apply_agent_side_effects(user_message, action_data)
+    except ValueError as exc:
+        raise AgentRequestError(str(exc)) from None
+    if requests_planner_change(user_message) and not logs:
+        reply += "\n\nКалендарь и задачи не изменены: агент не передал данные для сохранения."
     st.session_state.agent_connection = {
         "signature": connection_signature(settings),
         "state": "verified",

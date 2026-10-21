@@ -4,6 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 import ast
 import base64
+import json
 from types import SimpleNamespace
 from datetime import date, datetime
 import uuid
@@ -153,6 +154,69 @@ def test_success_uses_existing_payload_and_applies_explicit_effect_once():
     assert chat(instance)["messages"][-1]["content"].endswith("Ответ тестового агента")
     assert len(instance.session_state.calendar_events) == 1
     assert instance.session_state.agent_connection["state"] == "verified"
+
+
+def test_vertex_json_reply_saves_lesson_and_opens_requested_calendar_date():
+    instance = app()
+    configure(instance)
+    queue(instance, "Поставь урок математики 5 ноября 2026 в 19:00")
+    structured = {"response": "Урок подготовлен", "add_calendar_events": [
+        {"title": "Математика", "date": "2026-11-05", "time": "19:00"}], "add_tasks": []}
+    response = Mock(status_code=200)
+    response.json.return_value = {"output": json.dumps(structured, ensure_ascii=False), "steps": []}
+    with patch("requests.post", return_value=response) as post:
+        instance.run()
+        instance.run()
+    assert not instance.exception
+    assert post.call_count == 1
+    assert "add_calendar_events" in post.call_args.kwargs["json"]["message"]
+    assert instance.session_state.calendar_events[0]["date"] == "2026-11-05"
+    instance.sidebar.radio[0].set_value("calendar_tasks").run()
+    assert not instance.exception
+    assert instance.session_state.selected_cal_date == date(2026, 11, 5)
+    assert instance.text_input(key="calendar_date_text").value == "05.11.2026"
+    assert len(instance.session_state.calendar_events) == 1
+
+
+def test_repeated_response_does_not_duplicate_lesson():
+    instance = app()
+    configure(instance)
+    response = Mock(status_code=200)
+    response.json.return_value = {"output": json.dumps({"response": "Готово", "add_calendar_events": [
+        {"title": "Урок", "date": "2026-11-05", "time": "19:00"}]})}
+    with patch("requests.post", return_value=response):
+        for _ in range(2):
+            queue(instance, "Добавь урок 5 ноября в 19:00")
+            instance.run()
+    assert not instance.exception
+    assert len(instance.session_state.calendar_events) == 1
+
+
+def test_bad_second_action_does_not_leave_partially_saved_lesson():
+    instance = app()
+    configure(instance)
+    queue(instance, "Добавь урок")
+    response = Mock(status_code=200)
+    response.json.return_value = {"output": json.dumps({"response": "Готово", "add_calendar_events": [
+        {"title": "Первый", "date": "2026-11-05"}, {"title": "Второй", "date": "2026-02-30"}]})}
+    with patch("requests.post", return_value=response):
+        instance.run()
+    assert not instance.exception
+    assert instance.session_state.calendar_events == []
+    assert chat(instance)["pending_request"]["status"] == "failed"
+
+
+def test_text_only_confirmation_does_not_pretend_to_save_lesson():
+    instance = app()
+    configure(instance)
+    queue(instance, "Поставь урок на 5 ноября")
+    response = Mock(status_code=200)
+    response.json.return_value = {"output": "Да, добавил"}
+    with patch("requests.post", return_value=response):
+        instance.run()
+    assert not instance.exception
+    assert instance.session_state.calendar_events == []
+    assert "Календарь и задачи не изменены" in chat(instance)["messages"][-1]["content"]
 
 
 @pytest.mark.parametrize("failure", [requests.Timeout(), requests.ConnectionError()])
