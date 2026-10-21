@@ -1,0 +1,745 @@
+{
+  "kind": "local_rehearsal_from_user_supplied_gateway_report",
+  "source_report_sha256": "bf0781efaf077aa00fc3237a94868782d18dd2a6f6d4aa35c6592e50029d8fa2",
+  "document_sha256": "3e762f047cb1ba93b3ab3752c4fa47838d611c56d1636e5689977333c4c6a5d7",
+  "repository_url": "https://github.com/irrumi/Campusgdg",
+  "analysis_live_flag": true,
+  "analysis_summary": {
+    "satisfied": 2,
+    "not_satisfied": 2
+  },
+  "input_provenance": {
+    "calendar": "explicit hypothetical rehearsal inputs from examples/deadline-demo/calendar.json",
+    "effort": "explicit hypothetical participant estimates, 180 minutes per open requirement; not model estimates"
+  },
+  "calendar_events": [
+    {
+      "id": "deadline-demo-seminar",
+      "title": "Демо: семинар",
+      "course": "Условия демонстрации",
+      "date": "2026-10-22",
+      "time": "17:00–19:00",
+      "location": "Демонстрационный сценарий",
+      "type": "lecture",
+      "_example": true
+    },
+    {
+      "id": "deadline-demo-lab",
+      "title": "Демо: лабораторная",
+      "course": "Условия демонстрации",
+      "date": "2026-10-23",
+      "time": "18:00–20:00",
+      "location": "Демонстрационный сценарий",
+      "type": "lecture",
+      "_example": true
+    },
+    {
+      "id": "deadline-demo-consultation",
+      "title": "Демо: консультация",
+      "course": "Условия демонстрации",
+      "date": "2026-10-24",
+      "time": "17:00–18:00",
+      "location": "Демонстрационный сценарий",
+      "type": "lecture",
+      "_example": true
+    }
+  ],
+  "estimates": {
+    "a89a7d863c12dc448cb57f62": 180,
+    "14096bc2583e25d15e2b7637": 180
+  },
+  "execution": "actual registered plan_before_deadline function, local",
+  "application_scope": "isolated in-memory calendar; authenticated Streamlit session not modified",
+  "checks": {
+    "no_calendar_overlap": true,
+    "no_duplicate_event_ids": true,
+    "unrelated_events_preserved": true,
+    "unchanged_sessions_preserved": 5,
+    "repeated_application_rejected": true,
+    "undo_restored_previous_calendar": true,
+    "no_work_after_deadline": true,
+    "explicit_deficit_minutes": 60,
+    "no_study_session_overlap": true
+  },
+  "plans": {
+    "initial": {
+      "deadline_id": "ec756c029618925807f0c6ad",
+      "due_at": "2026-10-24T21:00:00+05:00",
+      "start_at": "2026-10-22T03:51:19.902322+05:00",
+      "calendar_revision": "a318c435804209ec174d3db24b49656524b171bce4561ce971aa8b0e71b7edee",
+      "blocks": [
+        {
+          "id": "dcf245c408dbb77b20450d72",
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "start_at": "2026-10-22T19:00:00+05:00",
+          "end_at": "2026-10-22T20:30:00+05:00",
+          "minutes": 90
+        },
+        {
+          "id": "e63eec080a5dfef171c218d5",
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "start_at": "2026-10-22T20:30:00+05:00",
+          "end_at": "2026-10-22T21:00:00+05:00",
+          "minutes": 30
+        },
+        {
+          "id": "c9bf6722dff075bd6fc827e2",
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "start_at": "2026-10-23T17:00:00+05:00",
+          "end_at": "2026-10-23T18:00:00+05:00",
+          "minutes": 60
+        },
+        {
+          "id": "dcd7c84f5cf1fa30f5e780df",
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "start_at": "2026-10-23T20:00:00+05:00",
+          "end_at": "2026-10-23T21:00:00+05:00",
+          "minutes": 60
+        },
+        {
+          "id": "fa55c70ad1288e377bb49124",
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "start_at": "2026-10-24T18:00:00+05:00",
+          "end_at": "2026-10-24T19:30:00+05:00",
+          "minutes": 90
+        },
+        {
+          "id": "71fc2f765b3b28f45fb5bdeb",
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "start_at": "2026-10-24T19:30:00+05:00",
+          "end_at": "2026-10-24T20:00:00+05:00",
+          "minutes": 30
+        }
+      ],
+      "required_minutes": 360,
+      "available_minutes": 420,
+      "scheduled_minutes": 360,
+      "deficit_minutes": 0,
+      "unscheduled": [],
+      "slack_minutes": 60,
+      "warnings": [],
+      "changes": [
+        {
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "kind": "added",
+          "before": [],
+          "after": [
+            {
+              "id": "dcf245c408dbb77b20450d72",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T19:00:00+05:00",
+              "end_at": "2026-10-22T20:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "e63eec080a5dfef171c218d5",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T20:30:00+05:00",
+              "end_at": "2026-10-22T21:00:00+05:00",
+              "minutes": 30
+            },
+            {
+              "id": "c9bf6722dff075bd6fc827e2",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-23T17:00:00+05:00",
+              "end_at": "2026-10-23T18:00:00+05:00",
+              "minutes": 60
+            }
+          ]
+        },
+        {
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "kind": "added",
+          "before": [],
+          "after": [
+            {
+              "id": "dcd7c84f5cf1fa30f5e780df",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-23T20:00:00+05:00",
+              "end_at": "2026-10-23T21:00:00+05:00",
+              "minutes": 60
+            },
+            {
+              "id": "fa55c70ad1288e377bb49124",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T18:00:00+05:00",
+              "end_at": "2026-10-24T19:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "71fc2f765b3b28f45fb5bdeb",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T19:30:00+05:00",
+              "end_at": "2026-10-24T20:00:00+05:00",
+              "minutes": 30
+            }
+          ]
+        }
+      ],
+      "estimate_source": "student",
+      "id": "c430fa35ee377a63047bf83419fe7838fdbe38c8c9a5bfcf32670839b8931643"
+    },
+    "tomorrow_one_hour": {
+      "deadline_id": "ec756c029618925807f0c6ad",
+      "due_at": "2026-10-24T21:00:00+05:00",
+      "start_at": "2026-10-22T03:51:19.902322+05:00",
+      "calendar_revision": "54ee3bd75037050505322b4b22b6124b5adfb2e1d636ac3f57d1a6a66231bccb",
+      "blocks": [
+        {
+          "id": "dcf245c408dbb77b20450d72",
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "start_at": "2026-10-22T19:00:00+05:00",
+          "end_at": "2026-10-22T20:30:00+05:00",
+          "minutes": 90
+        },
+        {
+          "id": "e63eec080a5dfef171c218d5",
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "start_at": "2026-10-22T20:30:00+05:00",
+          "end_at": "2026-10-22T21:00:00+05:00",
+          "minutes": 30
+        },
+        {
+          "id": "c9bf6722dff075bd6fc827e2",
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "start_at": "2026-10-23T17:00:00+05:00",
+          "end_at": "2026-10-23T18:00:00+05:00",
+          "minutes": 60
+        },
+        {
+          "id": "fa55c70ad1288e377bb49124",
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "start_at": "2026-10-24T18:00:00+05:00",
+          "end_at": "2026-10-24T19:30:00+05:00",
+          "minutes": 90
+        },
+        {
+          "id": "71fc2f765b3b28f45fb5bdeb",
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "start_at": "2026-10-24T19:30:00+05:00",
+          "end_at": "2026-10-24T20:00:00+05:00",
+          "minutes": 30
+        },
+        {
+          "id": "abca0ac0fe349d8b6b5a5eac",
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "start_at": "2026-10-24T20:00:00+05:00",
+          "end_at": "2026-10-24T21:00:00+05:00",
+          "minutes": 60
+        }
+      ],
+      "required_minutes": 360,
+      "available_minutes": 360,
+      "scheduled_minutes": 360,
+      "deficit_minutes": 0,
+      "unscheduled": [],
+      "slack_minutes": 0,
+      "warnings": [],
+      "changes": [
+        {
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "kind": "unchanged",
+          "before": [
+            {
+              "id": "dcf245c408dbb77b20450d72",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T19:00:00+05:00",
+              "end_at": "2026-10-22T20:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "e63eec080a5dfef171c218d5",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T20:30:00+05:00",
+              "end_at": "2026-10-22T21:00:00+05:00",
+              "minutes": 30
+            },
+            {
+              "id": "c9bf6722dff075bd6fc827e2",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-23T17:00:00+05:00",
+              "end_at": "2026-10-23T18:00:00+05:00",
+              "minutes": 60
+            }
+          ],
+          "after": [
+            {
+              "id": "dcf245c408dbb77b20450d72",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T19:00:00+05:00",
+              "end_at": "2026-10-22T20:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "e63eec080a5dfef171c218d5",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T20:30:00+05:00",
+              "end_at": "2026-10-22T21:00:00+05:00",
+              "minutes": 30
+            },
+            {
+              "id": "c9bf6722dff075bd6fc827e2",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-23T17:00:00+05:00",
+              "end_at": "2026-10-23T18:00:00+05:00",
+              "minutes": 60
+            }
+          ]
+        },
+        {
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "kind": "moved",
+          "before": [
+            {
+              "id": "dcd7c84f5cf1fa30f5e780df",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-23T20:00:00+05:00",
+              "end_at": "2026-10-23T21:00:00+05:00",
+              "minutes": 60
+            },
+            {
+              "id": "fa55c70ad1288e377bb49124",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T18:00:00+05:00",
+              "end_at": "2026-10-24T19:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "71fc2f765b3b28f45fb5bdeb",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T19:30:00+05:00",
+              "end_at": "2026-10-24T20:00:00+05:00",
+              "minutes": 30
+            }
+          ],
+          "after": [
+            {
+              "id": "fa55c70ad1288e377bb49124",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T18:00:00+05:00",
+              "end_at": "2026-10-24T19:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "71fc2f765b3b28f45fb5bdeb",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T19:30:00+05:00",
+              "end_at": "2026-10-24T20:00:00+05:00",
+              "minutes": 30
+            },
+            {
+              "id": "abca0ac0fe349d8b6b5a5eac",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T20:00:00+05:00",
+              "end_at": "2026-10-24T21:00:00+05:00",
+              "minutes": 60
+            }
+          ]
+        }
+      ],
+      "estimate_source": "student",
+      "id": "adb22ad2257681d3a08e19d26cc53855b5f09ef4d7139ada8c713a344c8c79be"
+    },
+    "tomorrow_zero_hours": {
+      "deadline_id": "ec756c029618925807f0c6ad",
+      "due_at": "2026-10-24T21:00:00+05:00",
+      "start_at": "2026-10-22T03:51:19.902322+05:00",
+      "calendar_revision": "fe85c3efd5de6708225fe7e84ec27c5768a7b808724f37f24826ccdd356ad99a",
+      "blocks": [
+        {
+          "id": "dcf245c408dbb77b20450d72",
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "start_at": "2026-10-22T19:00:00+05:00",
+          "end_at": "2026-10-22T20:30:00+05:00",
+          "minutes": 90
+        },
+        {
+          "id": "e63eec080a5dfef171c218d5",
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "start_at": "2026-10-22T20:30:00+05:00",
+          "end_at": "2026-10-22T21:00:00+05:00",
+          "minutes": 30
+        },
+        {
+          "id": "fa55c70ad1288e377bb49124",
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "start_at": "2026-10-24T18:00:00+05:00",
+          "end_at": "2026-10-24T19:30:00+05:00",
+          "minutes": 90
+        },
+        {
+          "id": "71fc2f765b3b28f45fb5bdeb",
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "start_at": "2026-10-24T19:30:00+05:00",
+          "end_at": "2026-10-24T20:00:00+05:00",
+          "minutes": 30
+        },
+        {
+          "id": "abca0ac0fe349d8b6b5a5eac",
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "start_at": "2026-10-24T20:00:00+05:00",
+          "end_at": "2026-10-24T21:00:00+05:00",
+          "minutes": 60
+        }
+      ],
+      "required_minutes": 360,
+      "available_minutes": 300,
+      "scheduled_minutes": 300,
+      "deficit_minutes": 60,
+      "unscheduled": [
+        {
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "minutes": 60
+        }
+      ],
+      "slack_minutes": -60,
+      "warnings": [],
+      "changes": [
+        {
+          "work_id": "14096bc2583e25d15e2b7637",
+          "title": "Учет занятости в планировщике",
+          "kind": "moved",
+          "before": [
+            {
+              "id": "dcf245c408dbb77b20450d72",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T19:00:00+05:00",
+              "end_at": "2026-10-22T20:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "e63eec080a5dfef171c218d5",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T20:30:00+05:00",
+              "end_at": "2026-10-22T21:00:00+05:00",
+              "minutes": 30
+            },
+            {
+              "id": "c9bf6722dff075bd6fc827e2",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-23T17:00:00+05:00",
+              "end_at": "2026-10-23T18:00:00+05:00",
+              "minutes": 60
+            }
+          ],
+          "after": [
+            {
+              "id": "dcf245c408dbb77b20450d72",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T19:00:00+05:00",
+              "end_at": "2026-10-22T20:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "e63eec080a5dfef171c218d5",
+              "work_id": "14096bc2583e25d15e2b7637",
+              "title": "Учет занятости в планировщике",
+              "start_at": "2026-10-22T20:30:00+05:00",
+              "end_at": "2026-10-22T21:00:00+05:00",
+              "minutes": 30
+            }
+          ]
+        },
+        {
+          "work_id": "a89a7d863c12dc448cb57f62",
+          "title": "Передача файлов через HTTP gateway",
+          "kind": "unchanged",
+          "before": [
+            {
+              "id": "fa55c70ad1288e377bb49124",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T18:00:00+05:00",
+              "end_at": "2026-10-24T19:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "71fc2f765b3b28f45fb5bdeb",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T19:30:00+05:00",
+              "end_at": "2026-10-24T20:00:00+05:00",
+              "minutes": 30
+            },
+            {
+              "id": "abca0ac0fe349d8b6b5a5eac",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T20:00:00+05:00",
+              "end_at": "2026-10-24T21:00:00+05:00",
+              "minutes": 60
+            }
+          ],
+          "after": [
+            {
+              "id": "fa55c70ad1288e377bb49124",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T18:00:00+05:00",
+              "end_at": "2026-10-24T19:30:00+05:00",
+              "minutes": 90
+            },
+            {
+              "id": "71fc2f765b3b28f45fb5bdeb",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T19:30:00+05:00",
+              "end_at": "2026-10-24T20:00:00+05:00",
+              "minutes": 30
+            },
+            {
+              "id": "abca0ac0fe349d8b6b5a5eac",
+              "work_id": "a89a7d863c12dc448cb57f62",
+              "title": "Передача файлов через HTTP gateway",
+              "start_at": "2026-10-24T20:00:00+05:00",
+              "end_at": "2026-10-24T21:00:00+05:00",
+              "minutes": 60
+            }
+          ]
+        }
+      ],
+      "estimate_source": "student",
+      "id": "a5d5edd2c6027b9b1812ec525128c5285eae37acf984c1c3a51fa8915017704d"
+    }
+  },
+  "tool_receipts": [
+    [
+      {
+        "type": "tool_call",
+        "tool": "plan_before_deadline",
+        "status": "success",
+        "args": {
+          "due_at": "2026-10-24T21:00:00+05:00",
+          "daily_minutes": 180,
+          "day_limits": {},
+          "busy_events": 3
+        },
+        "result": {
+          "required_minutes": 360,
+          "available_minutes": 420,
+          "deficit_minutes": 0
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_call",
+        "tool": "plan_before_deadline",
+        "status": "success",
+        "args": {
+          "due_at": "2026-10-24T21:00:00+05:00",
+          "daily_minutes": 180,
+          "day_limits": {
+            "2026-10-23": 60
+          },
+          "busy_events": 9
+        },
+        "result": {
+          "required_minutes": 360,
+          "available_minutes": 360,
+          "deficit_minutes": 0
+        }
+      }
+    ],
+    [
+      {
+        "type": "tool_call",
+        "tool": "plan_before_deadline",
+        "status": "success",
+        "args": {
+          "due_at": "2026-10-24T21:00:00+05:00",
+          "daily_minutes": 180,
+          "day_limits": {
+            "2026-10-23": 0
+          },
+          "busy_events": 9
+        },
+        "result": {
+          "required_minutes": 360,
+          "available_minutes": 300,
+          "deficit_minutes": 60
+        }
+      }
+    ]
+  ],
+  "applied_calendar_after_replan": [
+    {
+      "id": "deadline-demo-seminar",
+      "title": "Демо: семинар",
+      "course": "Условия демонстрации",
+      "date": "2026-10-22",
+      "time": "17:00–19:00",
+      "location": "Демонстрационный сценарий",
+      "type": "lecture",
+      "_example": true
+    },
+    {
+      "id": "deadline-demo-lab",
+      "title": "Демо: лабораторная",
+      "course": "Условия демонстрации",
+      "date": "2026-10-23",
+      "time": "18:00–20:00",
+      "location": "Демонстрационный сценарий",
+      "type": "lecture",
+      "_example": true
+    },
+    {
+      "id": "deadline-demo-consultation",
+      "title": "Демо: консультация",
+      "course": "Условия демонстрации",
+      "date": "2026-10-24",
+      "time": "17:00–18:00",
+      "location": "Демонстрационный сценарий",
+      "type": "lecture",
+      "_example": true
+    },
+    {
+      "id": "deadline_dcf245c408dbb77b20450d72",
+      "title": "Учет занятости в планировщике",
+      "date": "2026-10-22",
+      "time": "19:00–20:30",
+      "course": "До сдачи",
+      "location": "Самостоятельно",
+      "type": "study",
+      "deadline_id": "ec756c029618925807f0c6ad",
+      "_deadline_plan": true,
+      "work_id": "14096bc2583e25d15e2b7637",
+      "plan_id": "adb22ad2257681d3a08e19d26cc53855b5f09ef4d7139ada8c713a344c8c79be"
+    },
+    {
+      "id": "deadline_e63eec080a5dfef171c218d5",
+      "title": "Учет занятости в планировщике",
+      "date": "2026-10-22",
+      "time": "20:30–21:00",
+      "course": "До сдачи",
+      "location": "Самостоятельно",
+      "type": "study",
+      "deadline_id": "ec756c029618925807f0c6ad",
+      "_deadline_plan": true,
+      "work_id": "14096bc2583e25d15e2b7637",
+      "plan_id": "adb22ad2257681d3a08e19d26cc53855b5f09ef4d7139ada8c713a344c8c79be"
+    },
+    {
+      "id": "deadline_c9bf6722dff075bd6fc827e2",
+      "title": "Учет занятости в планировщике",
+      "date": "2026-10-23",
+      "time": "17:00–18:00",
+      "course": "До сдачи",
+      "location": "Самостоятельно",
+      "type": "study",
+      "deadline_id": "ec756c029618925807f0c6ad",
+      "_deadline_plan": true,
+      "work_id": "14096bc2583e25d15e2b7637",
+      "plan_id": "adb22ad2257681d3a08e19d26cc53855b5f09ef4d7139ada8c713a344c8c79be"
+    },
+    {
+      "id": "deadline_fa55c70ad1288e377bb49124",
+      "title": "Передача файлов через HTTP gateway",
+      "date": "2026-10-24",
+      "time": "18:00–19:30",
+      "course": "До сдачи",
+      "location": "Самостоятельно",
+      "type": "study",
+      "deadline_id": "ec756c029618925807f0c6ad",
+      "_deadline_plan": true,
+      "work_id": "a89a7d863c12dc448cb57f62",
+      "plan_id": "adb22ad2257681d3a08e19d26cc53855b5f09ef4d7139ada8c713a344c8c79be"
+    },
+    {
+      "id": "deadline_71fc2f765b3b28f45fb5bdeb",
+      "title": "Передача файлов через HTTP gateway",
+      "date": "2026-10-24",
+      "time": "19:30–20:00",
+      "course": "До сдачи",
+      "location": "Самостоятельно",
+      "type": "study",
+      "deadline_id": "ec756c029618925807f0c6ad",
+      "_deadline_plan": true,
+      "work_id": "a89a7d863c12dc448cb57f62",
+      "plan_id": "adb22ad2257681d3a08e19d26cc53855b5f09ef4d7139ada8c713a344c8c79be"
+    },
+    {
+      "id": "deadline_abca0ac0fe349d8b6b5a5eac",
+      "title": "Передача файлов через HTTP gateway",
+      "date": "2026-10-24",
+      "time": "20:00–21:00",
+      "course": "До сдачи",
+      "location": "Самостоятельно",
+      "type": "study",
+      "deadline_id": "ec756c029618925807f0c6ad",
+      "_deadline_plan": true,
+      "work_id": "a89a7d863c12dc448cb57f62",
+      "plan_id": "adb22ad2257681d3a08e19d26cc53855b5f09ef4d7139ada8c713a344c8c79be"
+    }
+  ],
+  "browser_rehearsal": {
+    "url": "http://127.0.0.1:8504",
+    "input": "actual saved user gateway analysis, explicitly hypothetical calendar and effort",
+    "new_model_requests": 0,
+    "fake_service_responses": false,
+    "initial_calculation": {
+      "required_minutes": 360,
+      "available_minutes": 420
+    },
+    "one_hour_replan": {
+      "available_minutes": 360,
+      "moved_from": "2026-10-23T20:00:00+05:00",
+      "moved_to": "2026-10-24T20:00:00+05:00"
+    },
+    "applied_to_regular_calendar": true,
+    "observed_study_blocks_after_replan": 6,
+    "observed_demo_events_preserved": 3,
+    "repeated_apply_button_disabled": true,
+    "zero_hours_shows_explicit_unscheduled_minutes": 60,
+    "final_state": "one-hour-tomorrow proposal applied; zero-hour constraint removed",
+    "original_authenticated_8502_session": "untouched",
+    "screenshots": [
+      "real-export-before.jpg",
+      "real-export-after.jpg"
+    ]
+  }
+}

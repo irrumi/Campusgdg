@@ -65,3 +65,47 @@ an empty URL, a localhost endpoint, a saved key and a custom model/protocol, are
 never automatically replaced during a code update. Applying project defaults to
 an existing session uses the explicit action in the settings dialog. Credential
 files are not changed by the integration.
+
+## «До сдачи»
+
+The sidebar's `deadline_rescue` view owns a read-only assignment/repository review and
+an explicit local calendar proposal. `campus_chat_ui/deadline_mode.py` owns this workflow;
+`deadline_state.py` owns atomic apply/Undo, and `tool_activity.py` owns public tool receipts
+in both chat and review. Existing Streamlit controls, `date_field`, global CSS and native
+inline feedback remain canonical. Source data is quoted as text, never executed as instructions.
+
+Review/plan requests follow queued → running → success/failed. Interrupted requests are
+never automatically replayed. Errors retain the last review and calendar. A review references
+its exact file SHA and repository; updating inputs requires a new explicit check. Readiness
+is not inferred from a green CI alone. Unknown requirements remain labelled unverified.
+
+Analysis uses the configured gateway and its existing application key. Planning executes
+the registered `plan_before_deadline` function locally without a network request or provider
+keys; its receipt says `execution: local`. A local calculation must not mark cloud connection
+as verified. A generic chat answer without the structured review is a compatibility error,
+not a fallback analysis. The default launcher selects this existing-gateway workflow;
+personal provider keys are requested only with explicit `--standalone`.
+
+A legacy successful response without `deadline` offers an explicit compatibility retry.
+An existing failed session migrates to the same action without losing its key or file.
+The retry calls the same gateway using a JSON-in-text protocol and actually executes our
+Custom Public GitHub MCP locally. Exact source citations and grounded findings remain
+mandatory. The mode and public-only limitation are disclosed; it is not labelled official
+GitHub MCP. Authentication/rate-limit failures never silently select this path. Changing
+the uploaded file requires dismissing the old pending operation before starting a new one.
+
+Time estimates are explicit input, initially unset (zero), and required for every pending
+requirement. The before/after timeline and unscheduled list expose all work. Changing a
+constraint creates a new proposal. Applying replaces only this assignment's marked calendar
+blocks; unrelated events stay intact. Changed calendar revisions disable stale proposals.
+One scoped Undo is offered after application. Session storage and export limitations are
+visible. No external calendar sync or automatically sent messages are claimed.
+
+Tool activity contains bounded, credential-filtered arguments/results and actual evidence
+receipts. Private thought entries are excluded from rendering and stored chat messages.
+Unverified cards display the actual requirement ambiguity and recorded citation/identifier
+rejection reasons in Russian. Older reports without diagnostics remain readable and do
+not receive an invented explanation. A separate sources expander retains access to reads
+even when the model's references were rejected. Contextual ambiguity resolution and one
+bounded citation repair appear as verification steps; neither automatically confirms work.
+Verification: `tests/test_deadline.py`, gateway regressions and Streamlit workflow tests.
